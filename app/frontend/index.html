@@ -485,7 +485,48 @@
       <i class="fa-solid fa-id-card-clip text-base mb-0.5"></i>
       <span>Staff</span>
     </button>
+
+    <button onclick="handleAuthClick()" id="mob-auth-btn" class="flex flex-col items-center py-1 px-3 text-slate-500 font-semibold text-[10px]">
+      <i class="fa-solid fa-circle-user text-base mb-0.5"></i>
+      <span id="mob-auth-label">Login</span>
+    </button>
   </nav>
+
+  <!-- ======================================================== -->
+  <!-- 🔐 LOGIN / SIGN-UP MODAL                                  -->
+  <!-- ======================================================== -->
+  <div id="auth-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white max-w-sm w-full rounded-3xl shadow-2xl p-6 border border-slate-100 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 id="auth-title" class="font-black text-lg text-slate-900">Login</h3>
+        <button onclick="closeAuthModal()" class="text-slate-400 hover:text-slate-700 text-xl leading-none" aria-label="Close">&times;</button>
+      </div>
+
+      <div class="flex bg-slate-100 rounded-xl p-1 text-xs font-semibold">
+        <button id="auth-tab-login" onclick="setAuthMode('login')" class="flex-1 py-1.5 rounded-lg bg-white shadow text-cyan-900">Login</button>
+        <button id="auth-tab-register" onclick="setAuthMode('register')" class="flex-1 py-1.5 rounded-lg text-slate-500">Sign up</button>
+      </div>
+
+      <div id="auth-register-fields" class="space-y-2 hidden">
+        <input id="auth-name" type="text" placeholder="Full name" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
+        <input id="auth-phone" type="tel" placeholder="Phone (10-15 digits)" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
+      </div>
+      <div class="space-y-2">
+        <input id="auth-username" type="text" placeholder="Email (or phone)" autocomplete="username" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
+        <input id="auth-password" type="password" placeholder="Password (min 6 chars)" autocomplete="current-password" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" onkeydown="if(event.key==='Enter') submitAuth()" />
+      </div>
+
+      <p id="auth-error" class="text-xs text-red-600 font-semibold hidden"></p>
+
+      <button id="auth-submit" onclick="submitAuth()" class="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-bold py-2.5 rounded-xl text-sm transition-all">Login</button>
+
+      <div id="auth-demo" class="text-[11px] text-slate-500 border-t border-slate-100 pt-3">
+        Demo accounts:
+        <button onclick="fillDemo('patient@medibud.com','password123')" class="underline text-cyan-700 font-semibold">Patient</button> ·
+        <button onclick="fillDemo('admin@lifeline.com','admin123')" class="underline text-cyan-700 font-semibold">Hospital admin</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ======================================================== -->
   <!-- 🚨 EMERGENCY READINESS & BED HOLD MODAL                   -->
@@ -2035,6 +2076,144 @@
         console.error('WS Error:', err);
       }
     }
+
+    // ============================================================
+    // 🔐 AUTH (login / sign-up / logout)
+    // ============================================================
+    let authState = null;
+    try { authState = JSON.parse(localStorage.getItem('medibud_auth') || 'null'); } catch (e) { authState = null; }
+    let authMode = 'login';
+
+    // Attach the JWT to every call to our own API
+    const _origFetch = window.fetch.bind(window);
+    window.fetch = (input, init = {}) => {
+      try {
+        const url = typeof input === 'string' ? input : (input && input.url) || '';
+        if (authState && authState.access_token && (url.startsWith(API_BASE) || url.startsWith('/api'))) {
+          init = { ...init, headers: { ...(init.headers || {}), Authorization: `Bearer ${authState.access_token}` } };
+        }
+      } catch (e) { /* fall through with original request */ }
+      return _origFetch(input, init);
+    };
+
+    function authErrorText(data, fallback) {
+      if (!data || !data.detail) return fallback;
+      if (typeof data.detail === 'string') return data.detail;
+      if (Array.isArray(data.detail)) return data.detail.map(d => (d.loc ? d.loc[d.loc.length - 1] + ': ' : '') + d.msg).join('; ');
+      return fallback;
+    }
+
+    function updateAuthUI() {
+      const btn = document.getElementById('auth-btn');
+      const mobLabel = document.getElementById('mob-auth-label');
+      if (authState) {
+        const first = (authState.full_name || 'User').split(' ')[0];
+        if (btn) btn.innerText = `Hi, ${first} · Logout`;
+        if (mobLabel) mobLabel.innerText = 'Logout';
+      } else {
+        if (btn) btn.innerText = 'Login / Sign‑up';
+        if (mobLabel) mobLabel.innerText = 'Login';
+      }
+    }
+
+    function showAuthError(msg) {
+      const el = document.getElementById('auth-error');
+      el.innerText = msg || '';
+      el.classList.toggle('hidden', !msg);
+    }
+
+    function setAuthMode(mode) {
+      authMode = mode;
+      const reg = mode === 'register';
+      document.getElementById('auth-register-fields').classList.toggle('hidden', !reg);
+      document.getElementById('auth-title').innerText = reg ? 'Create account' : 'Login';
+      document.getElementById('auth-submit').innerText = reg ? 'Sign up' : 'Login';
+      document.getElementById('auth-demo').classList.toggle('hidden', reg);
+      document.getElementById('auth-username').placeholder = reg ? 'Email' : 'Email (or phone)';
+      const on = 'flex-1 py-1.5 rounded-lg bg-white shadow text-cyan-900';
+      const off = 'flex-1 py-1.5 rounded-lg text-slate-500';
+      document.getElementById('auth-tab-login').className = reg ? off : on;
+      document.getElementById('auth-tab-register').className = reg ? on : off;
+      showAuthError('');
+    }
+
+    function openAuthModal() {
+      setAuthMode('login');
+      const m = document.getElementById('auth-modal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+      setTimeout(() => document.getElementById('auth-username').focus(), 50);
+    }
+
+    function closeAuthModal() {
+      const m = document.getElementById('auth-modal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    function fillDemo(user, pass) {
+      document.getElementById('auth-username').value = user;
+      document.getElementById('auth-password').value = pass;
+      showAuthError('');
+    }
+
+    function handleAuthClick() {
+      if (authState) { logout(); } else { openAuthModal(); }
+    }
+
+    function logout() {
+      authState = null;
+      localStorage.removeItem('medibud_auth');
+      updateAuthUI();
+    }
+
+    async function submitAuth() {
+      const username = document.getElementById('auth-username').value.trim();
+      const password = document.getElementById('auth-password').value;
+      if (!username || !password) { showAuthError('Please enter your email and password.'); return; }
+      const submit = document.getElementById('auth-submit');
+      submit.disabled = true;
+      showAuthError('');
+      try {
+        if (authMode === 'register') {
+          const full_name = document.getElementById('auth-name').value.trim();
+          const phone = document.getElementById('auth-phone').value.trim();
+          const regRes = await _origFetch(`${API_BASE}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: username, phone, password, full_name, role: 'patient' })
+          });
+          if (!regRes.ok) {
+            showAuthError(authErrorText(await regRes.json().catch(() => null), 'Could not create account.'));
+            return;
+          }
+        }
+        const res = await _origFetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok) { showAuthError(authErrorText(data, 'Login failed.')); return; }
+        authState = data;
+        try { localStorage.setItem('medibud_auth', JSON.stringify(data)); } catch (e) { /* storage unavailable */ }
+        updateAuthUI();
+        closeAuthModal();
+        document.getElementById('auth-password').value = '';
+        if (data.hospital_id) {
+          currentAdminHospitalId = Number(data.hospital_id);
+          if (currentTab === 'admin') loadAdminView();
+        }
+      } catch (err) {
+        console.error(err);
+        showAuthError('Cannot reach the server. Is it running?');
+      } finally {
+        submit.disabled = false;
+      }
+    }
+
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAuthModal(); });
+    updateAuthUI();
   </script>
 </body>
 </html>

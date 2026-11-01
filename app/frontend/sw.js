@@ -1,4 +1,4 @@
-const CACHE_NAME = 'medibud-v2';
+const CACHE_NAME = 'medibud-v3';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
