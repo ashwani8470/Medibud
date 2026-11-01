@@ -1,0 +1,361 @@
+{
+  "users": [
+    {
+      "email": "patient@demo",
+      "password": "demo",
+      "name": "Demo Patient",
+      "role": "PATIENT"
+    },
+    {
+      "email": "admin@demo",
+      "password": "demo",
+      "name": "Demo Admin",
+      "role": "HOSPITAL_ADMIN",
+      "hospitalName": "Regency Hospital Civil Lines"
+    }
+  ],
+  "hospitals": [
+    {
+      "name": "Regency Hospital Civil Lines",
+      "lat": 26.4725,
+      "lng": 80.3512,
+      "phone": "+91 98390 11001",
+      "address": "Civil Lines, Kanpur",
+      "facilities": ["24x7 Emergency", "Ambulance", "Pharmacy", "Blood Bank", "Lab", "CT Scan"],
+      "beds": {
+        "GENERAL": { "free": 8, "total": 24 },
+        "ICU": { "free": 2, "total": 8 },
+        "VENTILATOR": { "free": 1, "total": 4 },
+        "OXYGEN": { "free": 5, "total": 12 }
+      },
+      "doctors": [
+        { "name": "Dr. Ananya Sharma", "specialty": "Cardiology", "status": "AVAILABLE", "nextFreeSlot": "10:00" },
+        { "name": "Dr. Rohan Verma", "specialty": "Emergency Medicine", "status": "IN_SURGERY", "nextFreeSlot": "14:30" },
+        { "name": "Dr. Meera Singh", "specialty": "General Medicine", "status": "AVAILABLE", "nextFreeSlot": "11:30" }
+      ]
+    },
+    {
+      "name": "Ursala Horsman Memorial Hospital",
+      "lat": 26.4618,
+      "lng": 80.3324,
+      "phone": "+91 98390 11002",
+      "address": "Meston Road, Kanpur",
+      "facilities": ["24x7 Emergency", "Pharmacy", "Lab", "Maternity"],
+      "beds": {
+        "GENERAL": { "free": 4, "total": 18 },
+        "ICU": { "free": 0, "total": 6 },
+        "VENTILATOR": { "free": 0, "total": 3 },
+        "OXYGEN": { "free": 3, "total": 10 }
+      },
+      "doctors": [
+        { "name": "Dr. Kavita Gupta", "specialty": "Pediatrics", "status": "AVAILABLE", "nextFreeSlot": "10:00" },
+        { "name": "Dr. Imran Khan", "specialty": "Surgery", "status": "OFF_DUTY", "nextFreeSlot": "09:00" },
+        { "name": "Dr. Neha Mishra", "specialty": "Obstetrics", "status": "AVAILABLE", "nextFreeSlot": "15:00" }
+      ]
+    },
+    {
+      "name": "LPS Institute of Cardiology",
+      "lat": 26.4692,
+      "lng": 80.3186,
+      "phone": "+91 98390 11003",
+      "address": "Gumti No. 5, Kanpur",
+      "facilities": ["24x7 Emergency", "Cath Lab", "ICU", "Pharmacy"],
+      "beds": {
+        "GENERAL": { "free": 6, "total": 20 },
+        "ICU": { "free": 3, "total": 10 },
+        "VENTILATOR": { "free": 2, "total": 6 },
+        "OXYGEN": { "free": 7, "total": 14 }
+      },
+      "doctors": [
+        { "name": "Dr. Suresh Tiwari", "specialty": "Cardiology", "status": "AVAILABLE", "nextFreeSlot": "11:30" },
+        { "name": "Dr. Priya Saxena", "specialty": "Cardiothoracic Surgery", "status": "IN_SURGERY", "nextFreeSlot": "16:00" },
+        { "name": "Dr. Alok Yadav", "specialty": "General Medicine", "status": "AVAILABLE", "nextFreeSlot": "10:00" }
+      ]
+    },
+    {
+      "name": "Hallet Hospital (GSVM)",
+      "lat": 26.4584,
+      "lng": 80.3088,
+      "phone": "+91 98390 11004",
+      "address": "GSVM Campus, Kanpur",
+      "facilities": ["24x7 Emergency", "Ambulance", "Blood Bank", "Lab", "Trauma"],
+      "beds": {
+        "GENERAL": { "free": 12, "total": 40 },
+        "ICU": { "free": 4, "total": 12 },
+        "VENTILATOR": { "free": 1, "total": 5 },
+        "OXYGEN": { "free": 9, "total": 20 }
+      },
+      "doctors": [
+        { "name": "Dr. Rakesh Pandey", "specialty": "Orthopedics", "status": "AVAILABLE", "nextFreeSlot": "15:00" },
+        { "name": "Dr. Shalini Rao", "specialty": "Neurology", "status": "AVAILABLE", "nextFreeSlot": "10:00" },
+        { "name": "Dr. Vivek Dwivedi", "specialty": "Emergency Medicine", "status": "IN_SURGERY", "nextFreeSlot": "13:00" }
+      ]
+    },
+    {
+      "name": "Rama Hospital Kalyanpur",
+      "lat": 26.5088,
+      "lng": 80.2415,
+      "phone": "+91 98390 11005",
+      "address": "Kalyanpur, Kanpur",
+      "facilities": ["24x7 Emergency", "Pharmacy", "Lab", "Dialysis"],
+      "beds": {
+        "GENERAL": { "free": 5, "total": 16 },
+        "ICU": { "free": 1, "total": 6 },
+        "VENTILATOR": { "free": 0, "total": 2 },
+        "OXYGEN": { "free": 4, "total": 8 }
+      },
+      "doctors": [
+        { "name": "Dr. Nitin Agarwal", "specialty": "Nephrology", "status": "AVAILABLE", "nextFreeSlot": "11:30" },
+        { "name": "Dr. Pooja Bansal", "specialty": "General Medicine", "status": "OFF_DUTY", "nextFreeSlot": "09:00" },
+        { "name": "Dr. Farhan Ali", "specialty": "Surgery", "status": "AVAILABLE", "nextFreeSlot": "10:00" }
+      ]
+    },
+    {
+      "name": "Lifeline Hospital Kakadeo",
+      "lat": 26.4771,
+      "lng": 80.3014,
+      "phone": "+91 98390 11006",
+      "address": "Kakadeo, Kanpur",
+      "facilities": ["24x7 Emergency", "Ambulance", "Pharmacy", "Lab"],
+      "beds": {
+        "GENERAL": { "free": 3, "total": 14 },
+        "ICU": { "free": 2, "total": 5 },
+        "VENTILATOR": { "free": 1, "total": 3 },
+        "OXYGEN": { "free": 2, "total": 8 }
+      },
+      "doctors": [
+        { "name": "Dr. Anita Kapoor", "specialty": "Pediatrics", "status": "AVAILABLE", "nextFreeSlot": "10:00" },
+        { "name": "Dr. Mohit Jain", "specialty": "Orthopedics", "status": "AVAILABLE", "nextFreeSlot": "15:00" },
+        { "name": "Dr. Sana Qureshi", "specialty": "General Medicine", "status": "IN_SURGERY", "nextFreeSlot": "17:00" }
+      ]
+    },
+    {
+      "name": "Sunrise Super Speciality Kalyanpur",
+      "lat": 26.5136,
+      "lng": 80.2482,
+      "phone": "+91 98390 11007",
+      "address": "Kalyanpur Crossing, Kanpur",
+      "facilities": ["24x7 Emergency", "ICU", "Pharmacy", "MRI"],
+      "beds": {
+        "GENERAL": { "free": 7, "total": 18 },
+        "ICU": { "free": 0, "total": 7 },
+        "VENTILATOR": { "free": 0, "total": 3 },
+        "OXYGEN": { "free": 6, "total": 10 }
+      },
+      "doctors": [
+        { "name": "Dr. Deepak Chauhan", "specialty": "Neurology", "status": "AVAILABLE", "nextFreeSlot": "11:30" },
+        { "name": "Dr. Ritu Malhotra", "specialty": "Cardiology", "status": "OFF_DUTY", "nextFreeSlot": "10:00" },
+        { "name": "Dr. Arjun Sethi", "specialty": "Surgery", "status": "AVAILABLE", "nextFreeSlot": "15:00" }
+      ]
+    },
+    {
+      "name": "Apex Hospital Swaroop Nagar",
+      "lat": 26.4834,
+      "lng": 80.3198,
+      "phone": "+91 98390 11008",
+      "address": "Swaroop Nagar, Kanpur",
+      "facilities": ["24x7 Emergency", "Pharmacy", "Blood Bank", "Lab"],
+      "beds": {
+        "GENERAL": { "free": 2, "total": 12 },
+        "ICU": { "free": 1, "total": 4 },
+        "VENTILATOR": { "free": 1, "total": 2 },
+        "OXYGEN": { "free": 3, "total": 6 }
+      },
+      "doctors": [
+        { "name": "Dr. Leena Joshi", "specialty": "General Medicine", "status": "AVAILABLE", "nextFreeSlot": "10:00" },
+        { "name": "Dr. Harsh Vardhan", "specialty": "Pulmonology", "status": "AVAILABLE", "nextFreeSlot": "11:30" },
+        { "name": "Dr. Tanya Srivastava", "specialty": "Pediatrics", "status": "IN_SURGERY", "nextFreeSlot": "16:00" }
+      ]
+    },
+    {
+      "name": "Metro Hospital Kidwai Nagar",
+      "lat": 26.4296,
+      "lng": 80.3368,
+      "phone": "+91 98390 11009",
+      "address": "Kidwai Nagar, Kanpur",
+      "facilities": ["24x7 Emergency", "Ambulance", "Pharmacy", "Lab", "X-Ray"],
+      "beds": {
+        "GENERAL": { "free": 9, "total": 22 },
+        "ICU": { "free": 3, "total": 8 },
+        "VENTILATOR": { "free": 2, "total": 4 },
+        "OXYGEN": { "free": 8, "total": 12 }
+      },
+      "doctors": [
+        { "name": "Dr. Gaurav Shukla", "specialty": "Orthopedics", "status": "AVAILABLE", "nextFreeSlot": "15:00" },
+        { "name": "Dr. Nidhi Rastogi", "specialty": "Cardiology", "status": "AVAILABLE", "nextFreeSlot": "10:00" },
+        { "name": "Dr. Sameer Qazi", "specialty": "Emergency Medicine", "status": "OFF_DUTY", "nextFreeSlot": "08:00" }
+      ]
+    },
+    {
+      "name": "Shanti Hospital Govind Nagar",
+      "lat": 26.4412,
+      "lng": 80.3114,
+      "phone": "+91 98390 11010",
+      "address": "Govind Nagar, Kanpur",
+      "facilities": ["24x7 Emergency", "Pharmacy", "Lab"],
+      "beds": {
+        "GENERAL": { "free": 1, "total": 10 },
+        "ICU": { "free": 0, "total": 3 },
+        "VENTILATOR": { "free": 0, "total": 1 },
+        "OXYGEN": { "free": 2, "total": 6 }
+      },
+      "doctors": [
+        { "name": "Dr. Bhavna Tripathi", "specialty": "General Medicine", "status": "AVAILABLE", "nextFreeSlot": "11:30" },
+        { "name": "Dr. Kunal Mehra", "specialty": "Surgery", "status": "IN_SURGERY", "nextFreeSlot": "18:00" },
+        { "name": "Dr. Ayesha Rahman", "specialty": "Pediatrics", "status": "AVAILABLE", "nextFreeSlot": "10:00" }
+      ]
+    },
+    {
+      "name": "Green Cross Hospital Barra",
+      "lat": 26.4078,
+      "lng": 80.3182,
+      "phone": "+91 98390 11011",
+      "address": "Barra, Kanpur",
+      "facilities": ["24x7 Emergency", "Ambulance", "Pharmacy", "Lab"],
+      "beds": {
+        "GENERAL": { "free": 6, "total": 15 },
+        "ICU": { "free": 2, "total": 5 },
+        "VENTILATOR": { "free": 1, "total": 2 },
+        "OXYGEN": { "free": 4, "total": 8 }
+      },
+      "doctors": [
+        { "name": "Dr. Manoj Katiyar", "specialty": "General Medicine", "status": "AVAILABLE", "nextFreeSlot": "10:00" },
+        { "name": "Dr. Smita Bajpai", "specialty": "Gynecology", "status": "AVAILABLE", "nextFreeSlot": "15:00" },
+        { "name": "Dr. Irfan Sheikh", "specialty": "Orthopedics", "status": "OFF_DUTY", "nextFreeSlot": "09:00" }
+      ]
+    },
+    {
+      "name": "Prime Hospital Mall Road",
+      "lat": 26.4746,
+      "lng": 80.3471,
+      "phone": "+91 98390 11012",
+      "address": "Mall Road, Kanpur",
+      "facilities": ["24x7 Emergency", "Pharmacy", "Lab", "CT Scan"],
+      "beds": {
+        "GENERAL": { "free": 4, "total": 14 },
+        "ICU": { "free": 1, "total": 5 },
+        "VENTILATOR": { "free": 0, "total": 2 },
+        "OXYGEN": { "free": 3, "total": 7 }
+      },
+      "doctors": [
+        { "name": "Dr. Aditi Narayan", "specialty": "Neurology", "status": "AVAILABLE", "nextFreeSlot": "11:30" },
+        { "name": "Dr. Rajeev Khanna", "specialty": "Cardiology", "status": "IN_SURGERY", "nextFreeSlot": "14:00" },
+        { "name": "Dr. Komal Das", "specialty": "General Medicine", "status": "AVAILABLE", "nextFreeSlot": "10:00" }
+      ]
+    },
+    {
+      "name": "Aarogya Hospital Panki",
+      "lat": 26.4674,
+      "lng": 80.2436,
+      "phone": "+91 98390 11013",
+      "address": "Panki, Kanpur",
+      "facilities": ["24x7 Emergency", "Ambulance", "Pharmacy"],
+      "beds": {
+        "GENERAL": { "free": 8, "total": 16 },
+        "ICU": { "free": 2, "total": 4 },
+        "VENTILATOR": { "free": 1, "total": 2 },
+        "OXYGEN": { "free": 5, "total": 8 }
+      },
+      "doctors": [
+        { "name": "Dr. Yogesh Pal", "specialty": "Emergency Medicine", "status": "AVAILABLE", "nextFreeSlot": "10:00" },
+        { "name": "Dr. Ruchi Sinha", "specialty": "Pulmonology", "status": "AVAILABLE", "nextFreeSlot": "15:00" },
+        { "name": "Dr. Devansh Goel", "specialty": "Surgery", "status": "OFF_DUTY", "nextFreeSlot": "08:30" }
+      ]
+    },
+    {
+      "name": "Noble Hospital Jajmau",
+      "lat": 26.4251,
+      "lng": 80.4058,
+      "phone": "+91 98390 11014",
+      "address": "Jajmau, Kanpur",
+      "facilities": ["24x7 Emergency", "Pharmacy", "Lab", "Blood Bank"],
+      "beds": {
+        "GENERAL": { "free": 0, "total": 12 },
+        "ICU": { "free": 1, "total": 4 },
+        "VENTILATOR": { "free": 0, "total": 2 },
+        "OXYGEN": { "free": 1, "total": 6 }
+      },
+      "doctors": [
+        { "name": "Dr. Parul Awasthi", "specialty": "General Medicine", "status": "AVAILABLE", "nextFreeSlot": "11:30" },
+        { "name": "Dr. Naveen Chandra", "specialty": "Orthopedics", "status": "AVAILABLE", "nextFreeSlot": "10:00" },
+        { "name": "Dr. Hina Fatima", "specialty": "Pediatrics", "status": "IN_SURGERY", "nextFreeSlot": "16:30" }
+      ]
+    },
+    {
+      "name": "Care Plus Hospital Harsh Nagar",
+      "lat": 26.4548,
+      "lng": 80.3342,
+      "phone": "+91 98390 11015",
+      "address": "Harsh Nagar, Kanpur",
+      "facilities": ["24x7 Emergency", "Pharmacy", "Lab", "Ambulance"],
+      "beds": {
+        "GENERAL": { "free": 5, "total": 13 },
+        "ICU": { "free": 2, "total": 5 },
+        "VENTILATOR": { "free": 1, "total": 2 },
+        "OXYGEN": { "free": 4, "total": 7 }
+      },
+      "doctors": [
+        { "name": "Dr. Sanjay Dubey", "specialty": "Cardiology", "status": "AVAILABLE", "nextFreeSlot": "10:00" },
+        { "name": "Dr. Isha Khandelwal", "specialty": "General Medicine", "status": "AVAILABLE", "nextFreeSlot": "15:00" },
+        { "name": "Dr. Prateek Anand", "specialty": "Neurology", "status": "OFF_DUTY", "nextFreeSlot": "09:00" }
+      ]
+    },
+    {
+      "name": "Unity Hospital Gumti",
+      "lat": 26.4596,
+      "lng": 80.3221,
+      "phone": "+91 98390 11016",
+      "address": "Gumti, Kanpur",
+      "facilities": ["24x7 Emergency", "Pharmacy", "Lab"],
+      "beds": {
+        "GENERAL": { "free": 3, "total": 11 },
+        "ICU": { "free": 0, "total": 3 },
+        "VENTILATOR": { "free": 0, "total": 1 },
+        "OXYGEN": { "free": 2, "total": 5 }
+      },
+      "doctors": [
+        { "name": "Dr. Varun Sahu", "specialty": "Surgery", "status": "IN_SURGERY", "nextFreeSlot": "17:00" },
+        { "name": "Dr. Megha Luthra", "specialty": "Pediatrics", "status": "AVAILABLE", "nextFreeSlot": "11:30" },
+        { "name": "Dr. Ashfaq Hussain", "specialty": "General Medicine", "status": "AVAILABLE", "nextFreeSlot": "10:00" }
+      ]
+    },
+    {
+      "name": "City Care Hospital Civil Lines",
+      "lat": 26.4659,
+      "lng": 80.3538,
+      "phone": "+91 98390 11017",
+      "address": "Civil Lines, Kanpur",
+      "facilities": ["24x7 Emergency", "Ambulance", "Pharmacy", "Lab", "ICU"],
+      "beds": {
+        "GENERAL": { "free": 7, "total": 20 },
+        "ICU": { "free": 3, "total": 7 },
+        "VENTILATOR": { "free": 2, "total": 3 },
+        "OXYGEN": { "free": 6, "total": 10 }
+      },
+      "doctors": [
+        { "name": "Dr. Rekha Nair", "specialty": "Emergency Medicine", "status": "AVAILABLE", "nextFreeSlot": "10:00" },
+        { "name": "Dr. Amit Bhatia", "specialty": "Cardiology", "status": "AVAILABLE", "nextFreeSlot": "11:30" },
+        { "name": "Dr. Shreya Menon", "specialty": "Orthopedics", "status": "IN_SURGERY", "nextFreeSlot": "15:30" }
+      ]
+    },
+    {
+      "name": "Fortune Hospital Rawatpur",
+      "lat": 26.4962,
+      "lng": 80.2814,
+      "phone": "+91 98390 11018",
+      "address": "Rawatpur, Kanpur",
+      "facilities": ["24x7 Emergency", "Pharmacy", "Lab", "Dialysis"],
+      "beds": {
+        "GENERAL": { "free": 4, "total": 15 },
+        "ICU": { "free": 1, "total": 6 },
+        "VENTILATOR": { "free": 1, "total": 3 },
+        "OXYGEN": { "free": 3, "total": 9 }
+      },
+      "doctors": [
+        { "name": "Dr. Karan Oberoi", "specialty": "Nephrology", "status": "AVAILABLE", "nextFreeSlot": "15:00" },
+        { "name": "Dr. Divya Pathak", "specialty": "General Medicine", "status": "OFF_DUTY", "nextFreeSlot": "09:00" },
+        { "name": "Dr. Sahil Arora", "specialty": "Pulmonology", "status": "AVAILABLE", "nextFreeSlot": "10:00" }
+      ]
+    }
+  ]
+}

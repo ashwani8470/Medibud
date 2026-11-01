@@ -1,0 +1,17 @@
+backend/target/
+backend/data/
+frontend/node_modules/
+frontend/dist/
+.idea/
+*.iml
+.vscode/
+*.log
+.DS_Store
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.db
+.env

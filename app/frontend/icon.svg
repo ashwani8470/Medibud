@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0e7490"/>
+      <stop offset="100%" stop-color="#155e75"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <!-- Background Rounded Squircle -->
+  <rect width="512" height="512" rx="128" fill="url(#bg)"/>
+  
+  <!-- Hospital Emergency Cross Center -->
+  <g filter="url(#shadow)">
+    <!-- White Shield Base -->
+    <path d="M256 90 L390 145 C390 280 256 385 256 385 C256 385 122 280 122 145 Z" fill="#ffffff" />
+    
+    <!-- Red Cross Inside -->
+    <rect x="236" y="160" width="40" height="130" rx="10" fill="#dc2626"/>
+    <rect x="191" y="205" width="130" height="40" rx="10" fill="#dc2626"/>
+    
+    <!-- Heartbeat Line Motif -->
+    <path d="M170 320 L215 320 L235 290 L260 345 L285 305 L305 320 L342 320" fill="none" stroke="#0e7490" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

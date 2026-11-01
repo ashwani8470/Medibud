@@ -1,0 +1,2040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>MediBud — Hospital Emergency & Bed Booking</title>
+  
+  <!-- PWA & Mobile Web App Meta Tags -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0e7490" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="MediBud" />
+  <link rel="apple-touch-icon" href="/static/icon-192.png" />
+  <link rel="icon" type="image/svg+xml" href="/static/icon.svg" />
+
+  <!-- Tailwind CSS & Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  
+  <!-- Leaflet Map CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 14px rgba(220, 38, 38, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+    }
+    .emergency-pulse {
+      animation: pulse-ring 2s infinite;
+    }
+    .leaflet-popup-content-wrapper {
+      border-radius: 12px;
+      padding: 4px;
+    }
+    .tap-btn:active {
+      transform: scale(0.92);
+    }
+    body.is-standalone-app {
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans pb-20 sm:pb-6">
+
+  <!-- ======================================================== -->
+  <!-- MOBILE BROWSER "DOWNLOAD APP" BANNER -->
+  <!-- ======================================================== -->
+  <div id="mobile-install-banner" class="hidden bg-slate-900 text-white px-4 py-3 shadow-2xl border-b border-slate-700 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <img src="/static/icon-192.png" alt="MediBud App" class="w-10 h-10 rounded-xl shadow-md border border-cyan-500/40 shrink-0" />
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h4 class="font-extrabold text-xs text-white">MediBud App</h4>
+            <span class="bg-emerald-500/20 text-emerald-400 text-[9px] font-bold px-1.5 py-0.2 rounded border border-emerald-500/30">Official</span>
+  
+        </div>
+          <p class="text-[11px] text-slate-300">Fast 1-tap emergency booking on phone</p>
+          <div class="flex items-center gap-1 text-[10px] text-amber-400">
+            <span>★★★★★ 4.9</span>
+            <span class="text-slate-400">• Free Download</span>
+  
+        </div>
+
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="triggerAppInstall()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs px-3.5 py-2 rounded-xl shadow-lg flex items-center gap-1.5 transition-transform active:scale-95">
+          <i class="fa-solid fa-download"></i>
+          <span>GET APP</span>
+        </button>
+        <button onclick="dismissInstallBanner()" class="text-slate-400 hover:text-white px-1.5 py-1 text-sm font-bold">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- HEADER -->
+  <!-- ======================================================== -->
+  <header class="bg-cyan-800 text-white sticky top-0 z-40 shadow-md">
+    <div class="max-w-6xl mx-auto px-4 py-2.5 sm:py-3 flex items-center justify-between gap-3">
+      
+      <!-- Brand & Mode Indicator -->
+      <div class="flex items-center gap-2.5 cursor-pointer" onclick="switchPatientSubTab('hospitals')">
+        <img src="/static/icon.svg" class="w-8 h-8 rounded-lg shadow-sm" alt="MediBud Logo" />
+        <div>
+          <h1 class="font-extrabold text-base sm:text-lg leading-tight tracking-tight flex items-center gap-2">
+            MediBud 
+            <span id="app-badge" class="text-[10px] bg-cyan-900 border border-cyan-700 px-2 py-0.5 rounded-full font-medium text-cyan-200">
+              Web Edition
+            </span>
+          </h1>
+          <p class="text-[10px] sm:text-[11px] text-cyan-200">Emergency & Availability Network</p>
+
+        </div>
+      </div>
+
+      <!-- Navigation & Mode Tabs (Desktop) -->
+      <div class="flex items-center gap-2">
+        <button id="header-download-btn" onclick="openDownloadModal()" class="hidden sm:flex bg-cyan-950 hover:bg-cyan-900 text-cyan-200 hover:text-white text-xs font-semibold px-2.5 py-1.5 rounded-xl border border-cyan-700 items-center gap-1.5 transition-all">
+          <i class="fa-solid fa-mobile-screen-button text-cyan-400"></i>
+          <span>Download App</span>
+        </button>
+
+        <div class="hidden sm:flex bg-cyan-950/60 p-1 rounded-xl items-center text-xs font-semibold">
+          <button id="auth-btn" onclick="handleAuthClick()" class="px-3 py-1.5 rounded-lg bg-cyan-700 text-white font-semibold hover:bg-cyan-600 transition-all">Login / Sign‑up</button>
+          <button id="tab-patient" onclick="switchTab('patient')" class="px-3 py-1.5 rounded-lg bg-white text-cyan-900 shadow transition-all">
+            <i class="fa-solid fa-user-injured mr-1"></i> Patient
+          </button>
+          <button id="tab-admin" onclick="switchTab('admin')" class="px-3 py-1.5 rounded-lg text-cyan-200 hover:text-white transition-all">
+            <i class="fa-solid fa-hospital-user mr-1"></i> Staff Panel
+          </button>
+
+        </div>
+
+        <button onclick="triggerEmergencyMode()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shadow-lg emergency-pulse">
+          <i class="fa-solid fa-truck-medical text-sm"></i>
+          <span>EMERGENCY SOS</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Realtime Telemetry Bar -->
+  <div class="bg-cyan-900 text-cyan-200 text-xs py-1.5 px-4 shadow-inner border-t border-cyan-800 flex items-center justify-between max-w-6xl mx-auto w-full">
+    <div class="flex items-center gap-2">
+      <span class="relative flex h-2.5 w-2.5">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+      </span>
+      <span id="ws-status" class="font-medium text-emerald-300">Live Telemetry Active</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="stale-info" class="text-[11px] text-cyan-300 hidden sm:inline">Freshness Heartbeat Active</span>
+      <label class="flex items-center gap-1.5 cursor-pointer text-cyan-100 hover:text-white">
+        <input type="checkbox" id="sim-checkbox" onchange="toggleSimulator(this.checked)" class="rounded text-cyan-600 focus:ring-0">
+        <span class="text-[11px] font-semibold">Demo Simulator</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-6xl w-full mx-auto p-3 sm:p-5">
+
+    <!-- ========================================== -->
+    <!-- PATIENT VIEW -->
+    <!-- ========================================== -->
+    <div id="patient-view" class="space-y-4">
+
+      <!-- Location Selector & Mode Selector Bar -->
+      <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+        <div class="flex flex-wrap gap-3 items-center justify-between">
+          <div class="flex items-center gap-2 flex-1 min-w-[240px]">
+            <i class="fa-solid fa-location-dot text-cyan-700 text-lg"></i>
+            <div class="flex-1">
+              <label class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Your Location</label>
+              <select id="user-location-select" onchange="onLocationChange(this.value)" class="w-full font-semibold text-sm bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-700 focus:outline-none focus:border-cyan-600">
+                <option value="26.4695,80.3512">📍 Civil Lines, Kanpur (Mall Road)</option>
+                <option value="26.4782,80.3025">📍 Kakadeo Coaching Hub</option>
+                <option value="26.5085,80.2440">📍 Kalyanpur (IIT Kanpur area)</option>
+                <option value="26.4320,80.3340">📍 Kidwai Nagar (South)</option>
+              </select>
+    
+        </div>
+  
+        </div>
+
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <button onclick="useCurrentGps()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1 border border-slate-300" title="Detect GPS">
+              <i class="fa-solid fa-crosshairs"></i> <span class="hidden md:inline">GPS</span>
+            </button>
+  
+        </div>
+
+        </div>
+
+        <!-- Normal Mode Sub-tabs: 1. Explore Hospitals vs 2. Guided Requirement/Checkup Booking -->
+        <div class="pt-2 border-t border-slate-100 flex items-center gap-2">
+          <button id="subtab-hospitals" onclick="switchPatientSubTab('hospitals')" class="flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold bg-cyan-700 text-white shadow-sm flex items-center justify-center gap-1.5 transition-all">
+            <i class="fa-solid fa-hospital"></i>
+            <span>Explore Nearby Hospitals</span>
+          </button>
+          <button id="subtab-services" onclick="switchPatientSubTab('services')" class="flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-cyan-50 text-slate-700 hover:text-cyan-800 border border-slate-200 flex items-center justify-center gap-1.5 transition-all">
+            <i class="fa-solid fa-stethoscope text-cyan-600"></i>
+            <span>Book by Checkup / Requirement</span>
+            <span class="bg-emerald-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full hidden sm:inline">NEW</span>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Active Bed Holds / Bookings Alert Card -->
+      <div id="active-hold-container" class="hidden"></div>
+
+      <!-- ======================================================== -->
+      <!-- 🚨 EMERGENCY MODE BANNER (with Facilities & On-Duty Doctors) -->
+      <!-- ======================================================== -->
+      <div id="emergency-banner" class="hidden bg-red-50 border-2 border-red-500 rounded-2xl p-4 shadow-md space-y-3">
+        <div class="flex items-center justify-between border-b border-red-200 pb-2">
+          <div class="flex items-center gap-2 text-red-700 font-extrabold text-sm sm:text-base">
+            <i class="fa-solid fa-triangle-exclamation text-xl animate-bounce"></i>
+            <span>NEAREST EMERGENCY HOSPITALS WITH FREE BEDS</span>
+  
+        </div>
+          <button onclick="closeEmergencyMode()" class="text-slate-400 hover:text-slate-700 text-sm font-bold px-2 py-1">✕</button>
+
+        </div>
+
+        <p class="text-xs text-red-800">
+          Click on any hospital to review <b>all facilities available</b> and <b>doctors on-duty for the next 1 hour</b> so they are free when you arrive.
+        </p>
+
+        <div id="emergency-results" class="grid sm:grid-cols-3 gap-3"></div>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- SUBVIEW A: EXPLORE HOSPITALS & BEDS                      -->
+      <!-- ======================================================== -->
+      <div id="subview-hospitals" class="space-y-4">
+        <!-- Search filter -->
+        <div class="flex items-center justify-between gap-2">
+          <input type="text" id="search-input" oninput="filterHospitals()" placeholder="Filter by hospital name, locality, or facility..." class="text-xs bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 w-full sm:max-w-md focus:outline-none focus:border-cyan-600 shadow-sm" />
+          <span id="hospital-count-label" class="text-xs font-bold text-slate-500 shrink-0">Loading...</span>
+
+        </div>
+
+        <div class="grid lg:grid-cols-12 gap-4">
+          <!-- Interactive Map -->
+          <div class="lg:col-span-5 bg-white rounded-2xl p-3 border border-slate-200 shadow-sm flex flex-col">
+            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Live Proximity Radar</span>
+              <span class="text-[11px] text-cyan-700 font-medium"><i class="fa-solid fa-map-pin mr-1"></i>Sorted by distance</span>
+    
+        </div>
+            <div id="map" class="h-64 sm:h-80 w-full rounded-xl z-0"></div>
+  
+        </div>
+
+          <!-- Hospital Cards List -->
+          <div class="lg:col-span-7 space-y-3">
+            <div id="hospitals-list" class="space-y-3"></div>
+  
+        </div>
+
+        </div>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- SUBVIEW B: GUIDED REQUIREMENT / CHECKUP BOOKING FLOW     -->
+      <!-- ======================================================== -->
+      <div id="subview-services" class="hidden bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+        
+        <!-- Header -->
+        <div class="border-b border-slate-100 pb-3 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 class="font-extrabold text-slate-900 text-base sm:text-lg flex items-center gap-2">
+              <i class="fa-solid fa-notes-medical text-cyan-700"></i>
+              <span>Book by Service / Health Checkup</span>
+            </h2>
+            <p class="text-xs text-slate-500">Select what you need. If a doctor is needed, you choose a specialist; otherwise, book the facility directly without doctor consultation.</p>
+  
+        </div>
+          <button onclick="resetGuidedBooking()" class="text-xs font-semibold text-cyan-700 hover:underline">
+            ⟳ Reset Selection
+          </button>
+
+        </div>
+
+        <!-- Step Indicator -->
+        <div class="grid grid-cols-4 gap-2 text-center text-[11px] font-bold">
+          <div id="step-ind-1" class="py-1.5 px-2 rounded-lg bg-cyan-700 text-white">1. Requirement</div>
+          <div id="step-ind-2" class="py-1.5 px-2 rounded-lg bg-slate-100 text-slate-400">2. Specific Test</div>
+          <div id="step-ind-3" class="py-1.5 px-2 rounded-lg bg-slate-100 text-slate-400">3. Hospital</div>
+          <div id="step-ind-4" class="py-1.5 px-2 rounded-lg bg-slate-100 text-slate-400">4. Confirm</div>
+
+        </div>
+
+        <!-- STEP 1: CATEGORY SELECTION -->
+        <div id="guided-step-1" class="space-y-3">
+          <h3 class="text-xs font-black uppercase tracking-wider text-slate-500">Step 1: What kind of checkup or facility do you need?</h3>
+          <div id="requirement-categories-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+
+        </div>
+
+        <!-- STEP 2: SPECIFIC SERVICE SELECTION -->
+        <div id="guided-step-2" class="hidden space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-black uppercase tracking-wider text-slate-500">Step 2: Choose your specific checkup or test</h3>
+            <button onclick="goToGuidedStep(1)" class="text-xs text-cyan-700 font-bold hover:underline">← Back to Categories</button>
+  
+        </div>
+          <div id="specific-services-grid" class="space-y-2"></div>
+
+        </div>
+
+        <!-- STEP 3: HOSPITAL SELECTION -->
+        <div id="guided-step-3" class="hidden space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-black uppercase tracking-wider text-slate-500">Step 3: Select a verified hospital offering this facility</h3>
+            <button onclick="goToGuidedStep(2)" class="text-xs text-cyan-700 font-bold hover:underline">← Back to Services</button>
+  
+        </div>
+          <div id="service-hospitals-grid" class="space-y-2.5"></div>
+
+        </div>
+
+        <!-- STEP 4: DOCTOR (IF NEEDED) OR TIME WINDOW + FINAL CONFIRMATION -->
+        <div id="guided-step-4" class="hidden space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-black uppercase tracking-wider text-slate-500">Step 4: Final Booking Details</h3>
+            <button onclick="goToGuidedStep(3)" class="text-xs text-cyan-700 font-bold hover:underline">← Back to Hospitals</button>
+  
+        </div>
+
+          <!-- Summary Pill -->
+          <div id="guided-summary-card" class="bg-cyan-50 border border-cyan-200 rounded-xl p-3 text-xs text-cyan-950 flex flex-wrap items-center justify-between gap-2"></div>
+
+          <!-- Doctor Selection Section (Only if requires_doctor === true) -->
+          <div id="guided-doctor-section" class="hidden space-y-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+            <div class="text-xs font-bold text-slate-800 flex items-center justify-between">
+              <span>Doctor Consultation Required: Select Available Specialist</span>
+              <span class="text-[11px] text-cyan-700">On-Duty & Free Today</span>
+    
+        </div>
+            <div id="guided-doctors-list" class="space-y-2"></div>
+  
+        </div>
+
+          <!-- Facility Direct Timing Section (If requires_doctor === false) -->
+          <div id="guided-facility-timing" class="hidden space-y-2 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+            <div class="text-xs font-bold text-emerald-900 flex items-center gap-1.5">
+              <i class="fa-solid fa-circle-check text-emerald-600"></i>
+              <span>Direct Facility Booking (No Doctor Consultation Needed)</span>
+    
+        </div>
+            <p class="text-[11px] text-emerald-800">Your lab or scan appointment will be directly scheduled in the facility department. Choose your arrival window:</p>
+            <div id="guided-time-windows" class="grid grid-cols-3 gap-2 text-xs">
+              <button type="button" onclick="selectTimeWindow('Morning: 08:30 - 11:30', this)" class="window-btn p-2 rounded-lg border border-emerald-300 bg-white font-bold text-emerald-900 hover:bg-emerald-100">🌅 Morning<br><span class="text-[10px] font-normal">08:30 - 11:30</span></button>
+              <button type="button" onclick="selectTimeWindow('Afternoon: 12:30 - 15:30', this)" class="window-btn p-2 rounded-lg border border-emerald-300 bg-white font-bold text-emerald-900 hover:bg-emerald-100">☀️ Afternoon<br><span class="text-[10px] font-normal">12:30 - 15:30</span></button>
+              <button type="button" onclick="selectTimeWindow('Evening: 16:30 - 19:30', this)" class="window-btn p-2 rounded-lg border border-emerald-300 bg-white font-bold text-emerald-900 hover:bg-emerald-100">🌆 Evening<br><span class="text-[10px] font-normal">16:30 - 19:30</span></button>
+    
+        </div>
+  
+        </div>
+
+          <!-- Patient Input & Submit -->
+          <div class="grid sm:grid-cols-2 gap-3 text-xs">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Patient Full Name</label>
+              <input type="text" id="guided-patient-name" placeholder="e.g. Aman Gupta" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-cyan-600" />
+    
+        </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Patient Contact Phone</label>
+              <input type="tel" id="guided-patient-phone" placeholder="e.g. +91 98765 43210" value="+919876543210" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-cyan-600" />
+    
+        </div>
+            <div class="sm:col-span-2">
+              <label class="block font-bold text-slate-700 mb-1">Medical Notes or Symptoms (Optional)</label>
+              <input type="text" id="guided-patient-notes" placeholder="e.g. Routine checkup, fasting sugar test" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-cyan-600" />
+    
+        </div>
+  
+        </div>
+
+          <div class="pt-2">
+            <button onclick="submitGuidedCheckupBooking()" id="guided-submit-btn" class="w-full py-3 bg-cyan-700 hover:bg-cyan-800 text-white font-extrabold text-sm rounded-xl shadow-md flex items-center justify-center gap-2">
+              <i class="fa-solid fa-check-circle"></i> Confirm Checkup Booking
+            </button>
+  
+        </div>
+
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- HOSPITAL ADMIN & STAFF VIEW -->
+    <!-- ========================================== -->
+    <div id="admin-view" class="hidden space-y-4">
+      <div class="bg-gradient-to-r from-cyan-900 to-slate-900 text-white p-4 rounded-2xl shadow-md flex flex-wrap gap-4 items-center justify-between">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-cyan-300">Staff Operational Portal</span>
+          <h2 class="text-xl font-black flex items-center gap-2">
+            <span>⚡ Zero-Friction 1-Tap Telemetry Dashboard</span>
+          </h2>
+          <p class="text-xs text-cyan-200 mt-0.5">Instant updates without forms. One click on `+` or `−` updates patient views in real time.</p>
+
+        </div>
+
+        <div class="flex items-center gap-2">
+          <label class="text-xs text-cyan-200 font-semibold">Managing Hospital:</label>
+          <select id="admin-hospital-select" onchange="onAdminHospitalChange(this.value)" class="bg-cyan-950 text-white border border-cyan-700 rounded-lg px-3 py-1.5 text-xs font-bold focus:outline-none">
+          </select>
+
+        </div>
+      </div>
+
+      <!-- Quick Update Grids -->
+      <div class="grid md:grid-cols-2 gap-4">
+        <!-- 1-Tap Bed Management -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+          <div class="flex items-center justify-between mb-3 border-b pb-2">
+            <h3 class="font-extrabold text-slate-800 text-sm flex items-center gap-1.5">
+              <i class="fa-solid fa-bed text-cyan-700"></i> Live Bed Inventory (1-Tap +/-)
+            </h3>
+            <span id="admin-last-updated" class="text-[11px] text-emerald-600 font-semibold">Updated just now</span>
+  
+        </div>
+          <div id="admin-bed-controls" class="space-y-3"></div>
+
+        </div>
+
+        <!-- 1-Tap Doctor Duty Toggles -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+          <div class="flex items-center justify-between mb-3 border-b pb-2">
+            <h3 class="font-extrabold text-slate-800 text-sm flex items-center gap-1.5">
+              <i class="fa-solid fa-user-doctor text-cyan-700"></i> Doctor On-Duty Roster
+            </h3>
+            <span class="text-[11px] text-slate-400">Tap status to cycle</span>
+  
+        </div>
+          <div id="admin-doctor-controls" class="space-y-3"></div>
+
+        </div>
+      </div>
+
+      <!-- Incoming Reservations Queue & Admissions -->
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+        <div class="flex items-center justify-between mb-3 border-b pb-2">
+          <h3 class="font-extrabold text-slate-800 text-sm flex items-center gap-2">
+            <i class="fa-solid fa-clipboard-check text-cyan-700"></i> Patient Hold Queue & Arrivals
+          </h3>
+          <span class="text-xs text-slate-500 font-medium">Verify patient code on arrival</span>
+
+        </div>
+        <div id="admin-queue-list" class="divide-y divide-slate-100"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- NATIVE MOBILE APP BOTTOM NAVIGATION BAR (Mobile Only)   -->
+  <!-- ======================================================== -->
+  <nav class="sm:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-40 px-3 py-1 flex items-center justify-around shadow-2xl">
+    <button onclick="switchPatientSubTab('hospitals')" id="mob-nav-hospitals" class="flex flex-col items-center py-1 px-3 text-cyan-700 font-bold text-[10px]">
+      <i class="fa-solid fa-hospital text-base mb-0.5"></i>
+      <span>Hospitals</span>
+    </button>
+
+    <button onclick="switchPatientSubTab('services')" id="mob-nav-services" class="flex flex-col items-center py-1 px-3 text-slate-500 font-semibold text-[10px]">
+      <i class="fa-solid fa-notes-medical text-base mb-0.5"></i>
+      <span>Checkups</span>
+    </button>
+
+    <button onclick="triggerEmergencyMode()" class="flex flex-col items-center -top-4 relative">
+      <div class="bg-red-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg border-4 border-white emergency-pulse">
+        <i class="fa-solid fa-truck-medical text-lg"></i>
+      </div>
+      <span class="text-[10px] font-black text-red-600 mt-0.5">SOS</span>
+    </button>
+
+    <button onclick="scrollToHolds()" id="mob-nav-holds" class="flex flex-col items-center py-1 px-3 text-slate-500 font-semibold text-[10px]">
+      <i class="fa-solid fa-bed text-base mb-0.5"></i>
+      <span>My Holds</span>
+    </button>
+
+    <button onclick="switchTab('admin')" id="mob-nav-admin" class="flex flex-col items-center py-1 px-3 text-slate-500 font-semibold text-[10px]">
+      <i class="fa-solid fa-id-card-clip text-base mb-0.5"></i>
+      <span>Staff</span>
+    </button>
+  </nav>
+
+  <!-- ======================================================== -->
+  <!-- 🚨 EMERGENCY READINESS & BED HOLD MODAL                   -->
+  <!-- Shows All Facilities + Doctors Available for next 1 hr   -->
+  <!-- ======================================================== -->
+  <div id="emergency-triage-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-white max-w-xl w-full rounded-3xl shadow-2xl p-5 border border-red-200 space-y-4 my-auto max-h-[92vh] overflow-y-auto">
+      
+      <!-- Modal Header -->
+      <div class="flex items-start justify-between border-b pb-3">
+        <div>
+          <span class="bg-red-100 text-red-800 text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-wider flex items-center gap-1 w-max">
+            <i class="fa-solid fa-truck-medical"></i> Emergency Triage Readiness
+          </span>
+          <h3 id="em-modal-hospital-name" class="font-black text-slate-900 text-base sm:text-lg mt-1"></h3>
+          <p id="em-modal-eta" class="text-xs text-red-700 font-bold"></p>
+
+        </div>
+        <button onclick="closeEmergencyTriageModal()" class="text-slate-400 hover:text-slate-600 text-base font-bold p-1">✕</button>
+      </div>
+
+      <!-- 1. All Facilities Available -->
+      <div class="space-y-1.5">
+        <label class="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+          <i class="fa-solid fa-building-circle-check text-cyan-700"></i> All Facilities Available at this Facility:
+        </label>
+        <div id="em-modal-facilities" class="flex flex-wrap gap-1.5"></div>
+      </div>
+
+      <!-- 2. Doctors Available for Next 1 Hour -->
+      <div class="space-y-2 bg-slate-50 border border-slate-200 rounded-2xl p-3.5">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+            <i class="fa-solid fa-user-doctor text-emerald-600"></i> Doctors on Duty for Next 1 Hour:
+          </label>
+          <span class="text-[10px] text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded-full">Guaranteed Free on Arrival</span>
+
+        </div>
+        <p class="text-[11px] text-slate-500">The doctors below are currently free and confirmed on duty so you won't encounter busy surgeons upon reaching the facility:</p>
+        <div id="em-modal-doctors" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+      </div>
+
+      <!-- 3. Bed Category Selection -->
+      <div class="space-y-2">
+        <label class="block text-xs font-bold text-slate-700">Select Bed to Lock (30-Minute Guaranteed Hold)</label>
+        <div id="em-modal-bed-selector" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+      </div>
+
+      <!-- 4. Patient Information -->
+      <div class="grid sm:grid-cols-2 gap-2 text-xs">
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Patient Full Name</label>
+          <input type="text" id="em-patient-name" placeholder="e.g. Rahul Sharma" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-red-600" />
+
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Contact Phone</label>
+          <input type="tel" id="em-patient-phone" placeholder="e.g. +91 98765 43210" value="+919876543210" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-red-600" />
+
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block font-bold text-slate-600 mb-1">Emergency Condition / Symptoms</label>
+          <input type="text" id="em-emergency-notes" placeholder="e.g. Severe chest pain, fracture trauma, acute breathing distress" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-red-600" />
+
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center gap-2 pt-2 border-t">
+        <a id="em-call-link" href="#" class="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl flex items-center gap-1.5 border border-slate-300">
+          <i class="fa-solid fa-phone text-red-600"></i> Direct Call
+        </a>
+        <button onclick="submitEmergencyBedHold()" id="em-submit-hold-btn" class="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-black rounded-xl shadow-lg flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-shield-halved"></i> Lock Bed & Alert Emergency Triage
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Download App Modal -->
+  <div id="download-app-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white max-w-sm w-full rounded-3xl shadow-2xl p-6 border border-slate-100 space-y-4 text-center">
+      <div class="mx-auto w-16 h-16 rounded-2xl bg-cyan-700 flex items-center justify-center shadow-lg p-3">
+        <img src="/static/icon.svg" class="w-full h-full" alt="MediBud" />
+      </div>
+
+      <div>
+        <h3 class="font-black text-lg text-slate-900">Install MediBud App</h3>
+        <p class="text-xs text-slate-500 mt-1">Install on your phone for instant 1-tap emergency booking without opening a browser.</p>
+      </div>
+
+      <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 text-left space-y-2 text-xs">
+        <div class="flex items-center gap-2 font-bold text-slate-800">
+          <i class="fa-solid fa-bolt text-amber-500"></i> Instant SOS Access from Home Screen
+
+        </div>
+        <div class="flex items-center gap-2 font-bold text-slate-800">
+          <i class="fa-solid fa-signal text-emerald-600"></i> Works even on slow 2G/3G connections
+
+        </div>
+        <div class="flex items-center gap-2 font-bold text-slate-800">
+          <i class="fa-solid fa-bell text-cyan-600"></i> Live 30-min bed hold alerts
+
+        </div>
+      </div>
+
+      <div class="space-y-2 pt-2">
+        <button onclick="triggerAppInstall()" class="w-full py-3 bg-cyan-700 hover:bg-cyan-800 text-white font-extrabold text-sm rounded-xl shadow-md flex items-center justify-center gap-2 active:scale-98">
+          <i class="fa-solid fa-download"></i> Install Mobile App
+        </button>
+
+        <div id="ios-instruction" class="hidden text-[11px] text-slate-500 bg-amber-50 border border-amber-200 p-2 rounded-xl text-center">
+          On iOS Safari: Tap <b>Share</b> <i class="fa-solid fa-arrow-up-from-bracket"></i> then select <b>"Add to Home Screen"</b>.
+
+        </div>
+
+        <button onclick="closeDownloadModal()" class="w-full py-2 text-xs text-slate-400 hover:text-slate-600 font-semibold">
+          Continue in Web Browser
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- JAVASCRIPT LOGIC -->
+  <!-- ========================================== -->
+  <script>
+    // State
+    const API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+      ? `${window.location.origin}/api`
+      : '/api';
+    
+    let currentTab = 'patient';
+    let currentPatientSubTab = 'hospitals';
+    let userLat = 26.4695;
+    let userLon = 80.3512;
+    let hospitalsData = [];
+    let selectedHospitalForEmergency = null;
+    let selectedBedTypeForHold = null;
+    let currentAdminHospitalId = 1;
+    let activeBookings = JSON.parse(localStorage.getItem('medibud_my_holds') || '[]');
+    let mapInstance = null;
+    let mapMarkers = [];
+    let userMarker = null;
+    let ws = null;
+    let deferredPrompt = null;
+
+    // Guided Booking State
+    let guidedCategory = null;
+    let guidedService = null;
+    let guidedHospital = null;
+    let guidedDoctor = null;
+    let guidedSlot = null;
+    let guidedTimeWindow = 'Morning: 08:30 - 11:30';
+
+    // Bed labels & colors
+    const BED_INFO = {
+      general: { label: 'General', color: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
+      icu: { label: 'ICU', color: 'bg-rose-50 text-rose-800 border-rose-200' },
+      ventilator: { label: 'Ventilator', color: 'bg-amber-50 text-amber-800 border-amber-200' },
+      oxygen: { label: 'Oxygen', color: 'bg-sky-50 text-sky-800 border-sky-200' }
+    };
+
+    // Health Requirements Catalog
+    const HEALTH_REQUIREMENTS = [
+      {
+        id: "checkup",
+        icon: "fa-heart-pulse",
+        color: "text-rose-600 bg-rose-50 border-rose-200",
+        title: "Full Body & Preventive Checkups",
+        description: "Master screening, executive packages, vital wellness checks",
+        services: [
+          {
+            id: "full_body",
+            name: "Master Full Body Health Screening",
+            desc: "65+ tests including Lipid, Liver, Kidney, Hemogram, ECG & Physician review",
+            price: "₹1,499",
+            requires_doctor: true,
+            specialty_needed: "General Medicine",
+            facility_keyword: "Lab"
+          },
+          {
+            id: "senior_citizen",
+            name: "Senior Citizen Wellness Package",
+            desc: "Geriatric screening, bone health, cardiac markers, diabetes evaluation",
+            price: "₹1,999",
+            requires_doctor: true,
+            specialty_needed: "General Medicine",
+            facility_keyword: "Lab"
+          },
+          {
+            id: "routine_wellness",
+            name: "Routine Blood & Vital Health Screen",
+            desc: "Vitals, fasting blood sugar, complete blood count & urine routine",
+            price: "₹599",
+            requires_doctor: false,
+            facility_keyword: "Lab"
+          }
+        ]
+      },
+      {
+        id: "radiology",
+        icon: "fa-radiation",
+        color: "text-indigo-600 bg-indigo-50 border-indigo-200",
+        title: "Radiology, MRI & CT Scan",
+        description: "Advanced imaging diagnostics without requiring a prior doctor consultation",
+        services: [
+          {
+            id: "mri_brain",
+            name: "MRI Scan (Brain / Spine / Joints)",
+            desc: "1.5T/3T diagnostic magnetic resonance imaging with detailed radiologist report",
+            price: "₹3,500",
+            requires_doctor: false,
+            facility_keyword: "MRI"
+          },
+          {
+            id: "ct_scan",
+            name: "High-Resolution CT Scan",
+            desc: "Ultra-fast spiral CT scan (Chest / Abdomen / Head) with 3D reconstruction",
+            price: "₹2,200",
+            requires_doctor: false,
+            facility_keyword: "CT Scan"
+          },
+          {
+            id: "ultrasound",
+            name: "Ultrasound Sonography (USG)",
+            desc: "Abdominal, pelvic or Doppler ultrasound screening",
+            price: "₹850",
+            requires_doctor: false,
+            facility_keyword: "Diagnostics"
+          }
+        ]
+      },
+      {
+        id: "cardio",
+        icon: "fa-heart",
+        color: "text-red-600 bg-red-50 border-red-200",
+        title: "Cardiology & Heart Care",
+        description: "Senior cardiologist OPD, ECG, 2D ECHO & chest distress triage",
+        services: [
+          {
+            id: "cardio_consult",
+            name: "Cardiologist OPD Consultation + 12-Lead ECG",
+            desc: "Comprehensive heart evaluation, blood pressure monitoring & doctor consultation",
+            price: "₹800",
+            requires_doctor: true,
+            specialty_needed: "Cardiology",
+            facility_keyword: "Cath Lab"
+          },
+          {
+            id: "echo_tmt",
+            name: "2D Echocardiogram & TMT Stress Test",
+            desc: "Cardiac ultrasound chamber analysis and treadmill exercise evaluation",
+            price: "₹1,800",
+            requires_doctor: false,
+            facility_keyword: "Cardiology"
+          }
+        ]
+      },
+      {
+        id: "ortho",
+        icon: "fa-bone",
+        color: "text-amber-600 bg-amber-50 border-amber-200",
+        title: "Orthopedic, Bone & Joint",
+        description: "Joint pain, fractures, spine care, arthritis assessment",
+        services: [
+          {
+            id: "ortho_opd",
+            name: "Orthopedic Specialist Consultation",
+            desc: "Evaluation for joint arthritis, fracture, ligament injury or spine distress",
+            price: "₹600",
+            requires_doctor: true,
+            specialty_needed: "Orthopedics",
+            facility_keyword: "Physiotherapy"
+          },
+          {
+            id: "digital_xray",
+            name: "Digital X-Ray Radiography",
+            desc: "High clarity digital radiograph (Bones / Chest / Joints) with instant films",
+            price: "₹450",
+            requires_doctor: false,
+            facility_keyword: "Diagnostics"
+          }
+        ]
+      },
+      {
+        id: "pediatrics",
+        icon: "fa-baby",
+        color: "text-sky-600 bg-sky-50 border-sky-200",
+        title: "Child & Pediatrics",
+        description: "Pediatrician consultation, child immunization, infant health review",
+        services: [
+          {
+            id: "pediatric_consult",
+            name: "Child Specialist (Pediatrician) Consultation",
+            desc: "Child development review, fever/infection triage, immunization schedule",
+            price: "₹500",
+            requires_doctor: true,
+            specialty_needed: "Pediatrics",
+            facility_keyword: "Pediatrics ICU"
+          }
+        ]
+      },
+      {
+        id: "neuro",
+        icon: "fa-brain",
+        color: "text-purple-600 bg-purple-50 border-purple-200",
+        title: "Neurology & Brain Assessment",
+        description: "Chronic headache, migraine, nerve disorders, stroke triage",
+        services: [
+          {
+            id: "neuro_consult",
+            name: "Senior Neurologist Consultation",
+            desc: "Detailed central nervous system, seizure & neuropathy assessment",
+            price: "₹900",
+            requires_doctor: true,
+            specialty_needed: "Neurology",
+            facility_keyword: "MRI"
+          }
+        ]
+      },
+      {
+        id: "lab",
+        icon: "fa-vial-virus",
+        color: "text-teal-600 bg-teal-50 border-teal-200",
+        title: "Pathology & Blood Tests",
+        description: "Direct lab tests: Fasting Sugar, Lipid, Thyroid, CBC, Liver & Kidney",
+        services: [
+          {
+            id: "blood_sugar_lipid",
+            name: "Diabetic & Lipid Profile Screening",
+            desc: "HbA1c, Fasting Blood Glucose, Cholesterol & Triglycerides Panel",
+            price: "₹490",
+            requires_doctor: false,
+            facility_keyword: "Lab"
+          },
+          {
+            id: "thyroid_panel",
+            name: "Complete Thyroid Profile (T3, T4, TSH)",
+            desc: "Endocrine hormonal evaluation with same-day reports",
+            price: "₹380",
+            requires_doctor: false,
+            facility_keyword: "Lab"
+          }
+        ]
+      }
+    ];
+
+    // --- Init ---
+    window.addEventListener('DOMContentLoaded', () => {
+      detectEnvironmentAndPWA();
+      initMap();
+      loadHospitals();
+      initWebSocket();
+      checkSimulatorStatus();
+      renderActiveHoldCards();
+      renderGuidedCategories();
+
+      setInterval(updateHoldCountdowns, 1000);
+    });
+
+    // --- PWA, Device & Install Detection ---
+    function detectEnvironmentAndPWA() {
+      // Auto-purge old service worker caches
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          names.forEach(name => {
+            if (name !== 'medibud-v2') caches.delete(name);
+          });
+        });
+      }
+
+      // Register Service Worker with cache-busting version
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js?v=2').then(reg => {
+          reg.update();
+        }).catch(err => console.log('SW registration:', err));
+      }
+
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768;
+
+      if (isStandalone) {
+        document.body.classList.add('is-standalone-app');
+        const badge = document.getElementById('app-badge');
+        if (badge) {
+          badge.innerText = 'Mobile App';
+          badge.className = 'text-[10px] bg-emerald-500 text-slate-950 px-2 py-0.5 rounded-full font-black';
+        }
+        const banner = document.getElementById('mobile-install-banner');
+        if (banner) banner.classList.add('hidden');
+      } else if (isMobileDevice) {
+        const banner = document.getElementById('mobile-install-banner');
+        const dismissed = sessionStorage.getItem('medibud_banner_dismissed');
+        if (banner && !dismissed) {
+          banner.classList.remove('hidden');
+        }
+      }
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        const downloadBtn = document.getElementById('header-download-btn');
+        if (downloadBtn) downloadBtn.classList.remove('hidden');
+        if (isMobileDevice) {
+          const banner = document.getElementById('mobile-install-banner');
+          if (banner) banner.classList.remove('hidden');
+        }
+      });
+    }
+
+    function triggerAppInstall() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            dismissInstallBanner();
+            closeDownloadModal();
+          }
+          deferredPrompt = null;
+        });
+      } else {
+        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        if (isIOS) {
+          document.getElementById('ios-instruction').classList.remove('hidden');
+          openDownloadModal();
+        } else {
+          alert("To install MediBud: Tap your browser menu (⋮ or Share) and select 'Add to Home Screen' or 'Install App'.");
+        }
+      }
+    }
+
+    function dismissInstallBanner() {
+      const banner = document.getElementById('mobile-install-banner');
+      if (banner) banner.classList.add('hidden');
+      sessionStorage.setItem('medibud_banner_dismissed', 'true');
+    }
+
+    function openDownloadModal() {
+      document.getElementById('download-app-modal').classList.remove('hidden');
+    }
+
+    function closeDownloadModal() {
+      document.getElementById('download-app-modal').classList.add('hidden');
+    }
+
+    // --- Sub-Tab Navigation for Normal Mode ---
+    function switchPatientSubTab(tab) {
+      currentPatientSubTab = tab;
+      const bH = document.getElementById('subtab-hospitals');
+      const bS = document.getElementById('subtab-services');
+      const vH = document.getElementById('subview-hospitals');
+      const vS = document.getElementById('subview-services');
+      const mobH = document.getElementById('mob-nav-hospitals');
+      const mobS = document.getElementById('mob-nav-services');
+
+      if (tab === 'hospitals') {
+        bH.className = "flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold bg-cyan-700 text-white shadow-sm flex items-center justify-center gap-1.5 transition-all";
+        bS.className = "flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-cyan-50 text-slate-700 hover:text-cyan-800 border border-slate-200 flex items-center justify-center gap-1.5 transition-all";
+        if (mobH) mobH.className = "flex flex-col items-center py-1 px-3 text-cyan-700 font-bold text-[10px]";
+        if (mobS) mobS.className = "flex flex-col items-center py-1 px-3 text-slate-500 font-semibold text-[10px]";
+        vH.classList.remove('hidden');
+        vS.classList.add('hidden');
+        setTimeout(() => { if (mapInstance) mapInstance.invalidateSize(); }, 200);
+      } else {
+        bS.className = "flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold bg-cyan-700 text-white shadow-sm flex items-center justify-center gap-1.5 transition-all";
+        bH.className = "flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-cyan-50 text-slate-700 hover:text-cyan-800 border border-slate-200 flex items-center justify-center gap-1.5 transition-all";
+        if (mobS) mobS.className = "flex flex-col items-center py-1 px-3 text-cyan-700 font-bold text-[10px]";
+        if (mobH) mobH.className = "flex flex-col items-center py-1 px-3 text-slate-500 font-semibold text-[10px]";
+        vS.classList.remove('hidden');
+        vH.classList.add('hidden');
+      }
+    }
+
+    // --- Main Tab Switch (Patient vs Staff) ---
+    function switchTab(tab) {
+      currentTab = tab;
+      const tP = document.getElementById('tab-patient');
+      const tA = document.getElementById('tab-admin');
+      const vP = document.getElementById('patient-view');
+      const vA = document.getElementById('admin-view');
+      const mobA = document.getElementById('mob-nav-admin');
+
+      if (tab === 'patient') {
+        if (tP) tP.className = "px-3 py-1.5 rounded-lg bg-white text-cyan-900 shadow transition-all";
+        if (tA) tA.className = "px-3 py-1.5 rounded-lg text-cyan-200 hover:text-white transition-all";
+        if (mobA) mobA.className = "flex flex-col items-center py-1 px-3 text-slate-500 font-semibold text-[10px]";
+        vP.classList.remove('hidden');
+        vA.classList.add('hidden');
+        switchPatientSubTab(currentPatientSubTab);
+      } else {
+        if (tA) tA.className = "px-3 py-1.5 rounded-lg bg-white text-cyan-900 shadow transition-all";
+        if (tP) tP.className = "px-3 py-1.5 rounded-lg text-cyan-200 hover:text-white transition-all";
+        if (mobA) mobA.className = "flex flex-col items-center py-1 px-3 text-cyan-700 font-bold text-[10px]";
+        vA.classList.remove('hidden');
+        vP.classList.add('hidden');
+        loadAdminView();
+      }
+    }
+
+    // --- Map Initialization ---
+    function initMap() {
+      const mapEl = document.getElementById('map');
+      if (!mapEl) return;
+      mapInstance = L.map(mapEl).setView([userLat, userLon], 12);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(mapInstance);
+
+      userMarker = L.circleMarker([userLat, userLon], {
+        radius: 8,
+        color: '#0e7490',
+        fillColor: '#06b6d4',
+        fillOpacity: 0.9,
+        weight: 3
+      }).addTo(mapInstance).bindPopup('<b>Your Location</b>');
+    }
+
+    function updateMapMarkers(hospitals) {
+      if (!mapInstance) return;
+      mapMarkers.forEach(m => mapInstance.removeLayer(m));
+      mapMarkers = [];
+
+      hospitals.forEach(h => {
+        const freeEmergency = h.emergency_free_beds || 0;
+        const markerColor = freeEmergency > 0 ? '#16a34a' : '#dc2626';
+        
+        const m = L.circleMarker([h.latitude, h.longitude], {
+          radius: 7,
+          color: markerColor,
+          fillColor: markerColor,
+          fillOpacity: 0.85,
+          weight: 2
+        }).addTo(mapInstance);
+
+        const popupContent = `
+          <div class="text-xs p-1">
+            <b class="text-slate-800 font-bold block">${h.name}</b>
+            <span class="text-slate-500">${h.distance_km ? h.distance_km + ' km away' : ''}</span>
+            <div class="mt-1 font-bold ${freeEmergency > 0 ? 'text-emerald-700' : 'text-red-600'}">
+              ICU/General Free: ${freeEmergency}
+    
+        </div>
+            <button onclick="openEmergencyTriageModal(${h.id})" class="inline-block mt-1 text-[11px] bg-red-600 text-white font-bold px-2 py-0.5 rounded">⚡ Emergency Triage</button>
+  
+        </div>
+        `;
+        m.bindPopup(popupContent);
+        mapMarkers.push(m);
+      });
+    }
+
+    // --- Data Fetching ---
+    async function loadHospitals() {
+      try {
+        const res = await fetch(`${API_BASE}/hospitals?lat=${userLat}&lon=${userLon}`);
+        if (!res.ok) throw new Error('Failed to load hospitals');
+        hospitalsData = await res.json();
+        renderHospitalsList(hospitalsData);
+        updateMapMarkers(hospitalsData);
+        populateAdminHospitalSelect(hospitalsData);
+      } catch (err) {
+        console.error(err);
+        document.getElementById('hospital-count-label').innerText = 'Could not load hospitals';
+      }
+    }
+
+    function onLocationChange(val) {
+      const [lat, lon] = val.split(',').map(Number);
+      userLat = lat;
+      userLon = lon;
+      if (userMarker) userMarker.setLatLng([lat, lon]);
+      if (mapInstance) mapInstance.panTo([lat, lon]);
+      loadHospitals();
+      if (guidedStep === 3) renderServiceHospitals();
+    }
+
+    function useCurrentGps() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          pos => {
+            userLat = pos.coords.latitude;
+            userLon = pos.coords.longitude;
+            if (userMarker) userMarker.setLatLng([userLat, userLon]);
+            if (mapInstance) mapInstance.panTo([userLat, userLon]);
+            loadHospitals();
+            alert(`Location updated to GPS coordinates: ${userLat.toFixed(3)}, ${userLon.toFixed(3)}`);
+          },
+          err => alert('GPS permission denied or unavailable. Using preset locality.')
+        );
+      }
+    }
+
+    function filterHospitals() {
+      const q = document.getElementById('search-input').value.toLowerCase();
+      const filtered = hospitalsData.filter(h => 
+        h.name.toLowerCase().includes(q) || 
+        h.address.toLowerCase().includes(q) ||
+        (h.facilities && h.facilities.some(f => f.toLowerCase().includes(q)))
+      );
+      renderHospitalsList(filtered);
+    }
+
+    // --- Render Patient Hospital Cards ---
+    function renderHospitalsList(hospitals) {
+      const container = document.getElementById('hospitals-list');
+      const countEl = document.getElementById('hospital-count-label');
+      countEl.innerText = `${hospitals.length} verified hospitals within range`;
+
+      if (!hospitals.length) {
+        container.innerHTML = `<div class="bg-white p-6 rounded-2xl text-center text-slate-500 border">No hospitals match your filter.</div>`;
+        return;
+      }
+
+      container.innerHTML = hospitals.map(h => {
+        const isStale = h.is_stale;
+        const minsAgo = h.last_updated_minutes_ago;
+        const freshnessTag = isStale
+          ? `<span class="text-amber-700 bg-amber-50 border border-amber-300 px-2 py-0.5 rounded text-[11px] font-semibold"><i class="fa-solid fa-clock-rotate-left mr-1"></i>Stale (${minsAgo}m ago)</span>`
+          : `<span class="text-emerald-700 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded text-[11px] font-semibold"><i class="fa-solid fa-circle-check mr-1"></i>Live (${minsAgo < 1 ? 'Just now' : minsAgo + 'm ago'})</span>`;
+
+        const bedChips = Object.keys(BED_INFO).map(bt => {
+          const b = h.beds && h.beds[bt];
+          const free = b ? b.free : 0;
+          const total = b ? b.total : 0;
+          const isZero = free === 0;
+          return `
+            <div class="px-2.5 py-1.5 rounded-xl border text-xs flex items-center justify-between gap-2 ${isZero ? 'bg-slate-50 text-slate-400 border-slate-200' : BED_INFO[bt].color}">
+              <span class="font-bold">${BED_INFO[bt].label}</span>
+              <span class="font-black ${isZero ? 'text-slate-400' : 'text-slate-900'}">${free}/${total}</span>
+    
+        </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-all space-y-3">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 class="font-extrabold text-slate-900 text-base">${h.name}</h3>
+                  ${h.is_verified ? '<i class="fa-solid fa-circle-check text-cyan-600 text-xs" title="Verified Hospital"></i>' : ''}
+        
+        </div>
+                <p class="text-xs text-slate-500 mt-0.5"><i class="fa-solid fa-location-dot mr-1 text-slate-400"></i>${h.address}</p>
+      
+        </div>
+
+              <div class="text-right shrink-0">
+                <span class="text-sm font-black text-slate-900">${h.distance_km ? h.distance_km.toFixed(1) + ' km' : 'Nearby'}</span>
+                <span class="text-[11px] text-slate-500 block">~${h.estimated_time_min || 5} mins drive</span>
+      
+        </div>
+    
+        </div>
+
+            <!-- Live Bed Telemetry Breakdown -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              ${bedChips}
+    
+        </div>
+
+            <!-- Facilities snippet & Freshness status -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
+              <div class="flex items-center gap-2 flex-wrap">
+                ${freshnessTag}
+                <span class="text-[11px] text-slate-400 hidden sm:inline">•</span>
+                <span class="text-[11px] text-slate-500 hidden sm:inline">${(h.facilities || []).slice(0, 3).join(' · ')}</span>
+      
+        </div>
+
+              <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <a href="tel:${h.emergency_phone}" class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-2.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1 border border-slate-300">
+                  <i class="fa-solid fa-phone text-red-600"></i> Call
+                </a>
+                <a target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${h.latitude},${h.longitude}" class="bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200 px-2.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1">
+                  <i class="fa-solid fa-diamond-turn-right text-cyan-700"></i> Maps
+                </a>
+                <button onclick="openEmergencyTriageModal(${h.id})" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-xl font-bold text-xs shadow-sm flex items-center gap-1">
+                  <i class="fa-solid fa-shield-halved"></i> Emergency Triage
+                </button>
+      
+        </div>
+    
+        </div>
+  
+        </div>
+        `;
+      }).join('');
+    }
+
+    // ========================================================
+    // 🚨 REQUIREMENT 1: EMERGENCY MODE & READINESS MODAL
+    // Displays all facilities + doctors available for next 1 hr
+    // ========================================================
+    async function triggerEmergencyMode() {
+      if ('vibrate' in navigator) navigator.vibrate([100, 50, 100]);
+
+      const banner = document.getElementById('emergency-banner');
+      const resultsContainer = document.getElementById('emergency-results');
+      banner.classList.remove('hidden');
+      resultsContainer.innerHTML = '<div class="text-xs text-red-700">Locating closest emergency triage centers...</div>';
+
+      try {
+        const res = await fetch(`${API_BASE}/hospitals/emergency?lat=${userLat}&lon=${userLon}&max_results=3`);
+        const emergencies = await res.json();
+
+        if (!emergencies.length) {
+          resultsContainer.innerHTML = '<div class="text-xs text-red-800 font-bold col-span-3">No emergency beds available within current zone! Contact 108 immediately.</div>';
+          return;
+        }
+
+        resultsContainer.innerHTML = emergencies.map(h => `
+          <div class="bg-white p-3.5 rounded-2xl border border-red-300 shadow space-y-2.5">
+            <div class="flex items-start justify-between">
+              <div>
+                <b class="text-slate-900 text-sm font-extrabold">${h.name}</b>
+                <p class="text-[11px] text-slate-500">${h.distance_km ? h.distance_km.toFixed(1) + ' km away' : ''} (~${h.estimated_time_min} mins drive)</p>
+      
+        </div>
+              <span class="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full">
+                ${h.emergency_free_beds} FREE BEDS
+              </span>
+    
+        </div>
+
+            <!-- Facilities snippet -->
+            <div class="text-[10px] text-slate-600 flex flex-wrap gap-1">
+              ${(h.facilities || []).slice(0, 4).map(f => `<span class="bg-slate-100 px-1.5 py-0.5 rounded font-medium">${f}</span>`).join('')}
+    
+        </div>
+
+            <div class="flex items-center gap-1.5 pt-1">
+              <a href="tel:${h.emergency_phone}" class="flex-1 text-center py-1.5 bg-red-600 hover:bg-red-700 text-white font-extrabold text-[11px] rounded-xl shadow">
+                📞 CALL NOW
+              </a>
+              <a target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${h.latitude},${h.longitude}" class="flex-1 text-center py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[11px] rounded-xl shadow">
+                🧭 NAVIGATE
+              </a>
+    
+        </div>
+
+            <button onclick="openEmergencyTriageModal(${h.id})" class="w-full py-2 text-center bg-red-50 hover:bg-red-100 text-red-800 font-extrabold text-xs rounded-xl border border-red-300 flex items-center justify-center gap-1.5">
+              <span>⚡ View Facilities & 1-Hr On-Duty Doctors</span>
+            </button>
+  
+        </div>
+        `).join('');
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (err) {
+        resultsContainer.innerHTML = '<div class="text-xs text-red-700 font-bold">Failed to load emergency centers.</div>';
+      }
+    }
+
+    function closeEmergencyMode() {
+      document.getElementById('emergency-banner').classList.add('hidden');
+    }
+
+    async function openEmergencyTriageModal(hospitalId) {
+      try {
+        const res = await fetch(`${API_BASE}/hospitals/${hospitalId}?lat=${userLat}&lon=${userLon}`);
+        const hospital = await res.json();
+        selectedHospitalForEmergency = hospital;
+
+        // Title and ETA
+        document.getElementById('em-modal-hospital-name').innerText = hospital.name;
+        document.getElementById('em-modal-eta').innerText = `📍 ${hospital.distance_km ? hospital.distance_km.toFixed(1) + ' km away' : ''} • Estimated arrival in ~${hospital.estimated_time_min || 5} minutes`;
+        document.getElementById('em-call-link').href = `tel:${hospital.emergency_phone}`;
+
+        // 1. All Facilities available at this hospital
+        const facilitiesContainer = document.getElementById('em-modal-facilities');
+        const facilities = hospital.facilities || ["24x7 Emergency", "Ambulance", "ICU", "Blood Bank", "Pharmacy", "Diagnostics"];
+        facilitiesContainer.innerHTML = facilities.map(f => `
+          <span class="bg-cyan-50 text-cyan-800 border border-cyan-200 text-xs font-bold px-2.5 py-1 rounded-xl flex items-center gap-1">
+            <i class="fa-solid fa-check text-cyan-600 text-[10px]"></i> ${f}
+          </span>
+        `).join('');
+
+        // 2. Doctors Available for Next 1 Hour (Guaranteed free, not in surgery or off duty)
+        const doctorsContainer = document.getElementById('em-modal-doctors');
+        const doctors = hospital.doctors || [];
+
+        if (!doctors.length) {
+          doctorsContainer.innerHTML = `<div class="text-xs text-slate-400">Emergency triage nursing staff active. No OPD physicians currently listed.</div>`;
+        } else {
+          // Sort: Available doctors first
+          const sortedDocs = [...doctors].sort((a,b) => (a.status === 'available' ? -1 : 1));
+
+          doctorsContainer.innerHTML = sortedDocs.map(d => {
+            const isAvail = d.status === 'available';
+            const isInSurgery = d.status === 'in_surgery';
+
+            return `
+              <div class="p-2.5 rounded-xl border flex flex-wrap items-center justify-between gap-2 text-xs ${isAvail ? 'bg-white border-emerald-300 shadow-sm' : 'bg-slate-100 border-slate-200 opacity-70'}">
+                <div>
+                  <div class="flex items-center gap-1.5">
+                    <b class="text-slate-900">${d.name}</b>
+                    <span class="text-slate-500">(${d.specialty})</span>
+          
+        </div>
+                  <p class="text-[11px] ${isAvail ? 'text-emerald-700 font-semibold' : 'text-slate-400'}">
+                    ${isAvail 
+                      ? `🟢 Free on Duty • Confirmed ready upon arrival in ~${hospital.estimated_time_min || 5}m` 
+                      : (isInSurgery ? '🟡 Currently in Emergency Surgery' : '⚪ Off Duty')}
+                  </p>
+        
+        </div>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${isAvail ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}">
+                  ${isAvail ? 'Available Now' : d.status.replace('_', ' ')}
+                </span>
+      
+        </div>
+            `;
+          }).join('');
+        }
+
+        // 3. Bed selector
+        const selector = document.getElementById('em-modal-bed-selector');
+        const btypes = ['general', 'icu', 'ventilator', 'oxygen'];
+        selectedBedTypeForHold = null;
+
+        selector.innerHTML = btypes.map(bt => {
+          const b = hospital.beds && hospital.beds[bt];
+          const free = b ? b.free : 0;
+          const disabled = free <= 0;
+          return `
+            <button type="button" ${disabled ? 'disabled' : ''} onclick="selectEmergencyBedOption('${bt}', this)" class="em-bed-opt-btn p-2 rounded-xl border text-left text-xs transition-all ${disabled ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-slate-50 text-slate-800 border-slate-300 hover:border-red-500'}">
+              <span class="font-bold block capitalize">${bt} Bed</span>
+              <span class="text-[11px] font-black ${free > 0 ? 'text-emerald-700' : 'text-slate-400'}">${free > 0 ? free + ' available' : 'Full'}</span>
+            </button>
+          `;
+        }).join('');
+
+        // Auto select first available bed
+        const firstAvailable = btypes.find(bt => hospital.beds[bt] && hospital.beds[bt].free > 0);
+        if (firstAvailable) {
+          setTimeout(() => {
+            const btn = selector.querySelector(`.em-bed-opt-btn:not([disabled])`);
+            if (btn) selectEmergencyBedOption(firstAvailable, btn);
+          }, 50);
+        }
+
+        document.getElementById('emergency-triage-modal').classList.remove('hidden');
+      } catch (err) {
+        alert('Could not load hospital emergency details');
+      }
+    }
+
+    function selectEmergencyBedOption(type, btn) {
+      selectedBedTypeForHold = type;
+      document.querySelectorAll('.em-bed-opt-btn').forEach(b => {
+        b.classList.remove('bg-red-50', 'border-red-500', 'ring-2', 'ring-red-400');
+      });
+      btn.classList.add('bg-red-50', 'border-red-500', 'ring-2', 'ring-red-400');
+    }
+
+    function closeEmergencyTriageModal() {
+      document.getElementById('emergency-triage-modal').classList.add('hidden');
+    }
+
+    async function submitEmergencyBedHold() {
+      if (!selectedHospitalForEmergency || !selectedBedTypeForHold) {
+        alert('Please select an available bed category to hold');
+        return;
+      }
+      const name = document.getElementById('em-patient-name').value.trim();
+      const phone = document.getElementById('em-patient-phone').value.trim();
+      const notes = document.getElementById('em-emergency-notes').value.trim();
+
+      if (!name || !phone) {
+        alert('Please provide patient name and contact phone');
+        return;
+      }
+
+      const submitBtn = document.getElementById('em-submit-hold-btn');
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Locking Bed & Alerting Desk...';
+
+      try {
+        const res = await fetch(`${API_BASE}/bookings/bed-hold`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            hospital_id: selectedHospitalForEmergency.id,
+            bed_type: selectedBedTypeForHold,
+            patient_name: name,
+            patient_phone: phone,
+            emergency_notes: notes
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed to hold bed');
+
+        activeBookings.push(data);
+        localStorage.setItem('medibud_my_holds', JSON.stringify(activeBookings));
+
+        closeEmergencyTriageModal();
+        closeEmergencyMode();
+        renderActiveHoldCards();
+        loadHospitals();
+        alert(`🚨 EMERGENCY BED RESERVED!\nBooking Code: ${data.booking_code}\nHold Time: 30 minutes guaranteed.\nEmergency Desk at ${selectedHospitalForEmergency.name} has been notified of your arrival.`);
+      } catch (err) {
+        alert(`❌ Hold Failed: ${err.message}`);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Lock Bed & Alert Emergency Triage';
+      }
+    }
+
+
+    // ========================================================
+    // 📋 REQUIREMENT 2: GUIDED REQUIREMENT-BASED BOOKING FLOW
+    // ========================================================
+    let guidedStep = 1;
+
+    function renderGuidedCategories() {
+      const grid = document.getElementById('requirement-categories-grid');
+      grid.innerHTML = HEALTH_REQUIREMENTS.map(cat => `
+        <div onclick="selectGuidedCategory('${cat.id}')" class="p-4 rounded-2xl border border-slate-200 hover:border-cyan-600 bg-white hover:bg-cyan-50/50 shadow-sm hover:shadow-md transition-all cursor-pointer space-y-2">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl ${cat.color} flex items-center justify-center font-bold text-lg border">
+              <i class="fa-solid ${cat.icon}"></i>
+    
+        </div>
+            <div>
+              <h4 class="font-extrabold text-sm text-slate-900 leading-tight">${cat.title}</h4>
+              <span class="text-[10px] text-cyan-700 font-bold">${cat.services.length} options available</span>
+    
+        </div>
+  
+        </div>
+          <p class="text-xs text-slate-500 leading-snug">${cat.description}</p>
+
+        </div>
+      `).join('');
+    }
+
+    function selectGuidedCategory(catId) {
+      guidedCategory = HEALTH_REQUIREMENTS.find(c => c.id === catId);
+      if (!guidedCategory) return;
+      renderSpecificServices();
+      goToGuidedStep(2);
+    }
+
+    function renderSpecificServices() {
+      const container = document.getElementById('specific-services-grid');
+      container.innerHTML = guidedCategory.services.map(s => `
+        <div onclick="selectGuidedService('${s.id}')" class="p-3.5 rounded-2xl border border-slate-200 hover:border-cyan-600 bg-white hover:bg-cyan-50/40 shadow-sm flex flex-wrap items-center justify-between gap-3 cursor-pointer transition-all">
+          <div class="flex-1 min-w-[220px]">
+            <div class="flex items-center gap-2">
+              <h4 class="font-extrabold text-sm text-slate-900">${s.name}</h4>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${s.requires_doctor ? 'bg-amber-100 text-amber-900 border border-amber-200' : 'bg-emerald-100 text-emerald-900 border border-emerald-200'}">
+                ${s.requires_doctor ? '👨‍⚕️ Specialist Consultation Included' : '⚡ Direct Lab/Scan (No Doctor Consultation Needed)'}
+              </span>
+    
+        </div>
+            <p class="text-xs text-slate-500 mt-0.5">${s.desc}</p>
+  
+        </div>
+
+          <div class="flex items-center gap-3">
+            <span class="text-sm font-black text-cyan-800">${s.price}</span>
+            <button class="bg-cyan-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-sm">
+              Select →
+            </button>
+  
+        </div>
+
+        </div>
+      `).join('');
+    }
+
+    function selectGuidedService(serviceId) {
+      guidedService = guidedCategory.services.find(s => s.id === serviceId);
+      if (!guidedService) return;
+      renderServiceHospitals();
+      goToGuidedStep(3);
+    }
+
+    function renderServiceHospitals() {
+      const container = document.getElementById('service-hospitals-grid');
+      // Filter hospitals that match the facility or show nearest
+      const keyword = (guidedService.facility_keyword || '').toLowerCase();
+      
+      const filtered = hospitalsData.filter(h => {
+        if (!keyword) return true;
+        return (h.facilities || []).some(f => f.toLowerCase().includes(keyword)) ||
+               h.name.toLowerCase().includes(keyword) ||
+               (guidedService.specialty_needed && (h.facilities || []).some(f => f.toLowerCase().includes(guidedService.specialty_needed.toLowerCase())));
+      });
+
+      const displayHospitals = filtered.length > 0 ? filtered : hospitalsData.slice(0, 5);
+
+      container.innerHTML = displayHospitals.map(h => `
+        <div onclick="selectGuidedHospital(${h.id})" class="p-3.5 rounded-2xl border border-slate-200 hover:border-cyan-600 bg-white hover:bg-cyan-50/40 shadow-sm flex flex-wrap items-center justify-between gap-3 cursor-pointer transition-all">
+          <div>
+            <div class="flex items-center gap-2">
+              <h4 class="font-extrabold text-sm text-slate-900">${h.name}</h4>
+              <span class="bg-cyan-100 text-cyan-800 text-[10px] font-bold px-1.5 py-0.2 rounded">Verified Facility</span>
+    
+        </div>
+            <p class="text-xs text-slate-500 mt-0.5">${h.address}</p>
+            <div class="text-[10px] text-slate-400 mt-1">
+              Facilities: ${(h.facilities || []).slice(0, 4).join(' • ')}
+    
+        </div>
+  
+        </div>
+
+          <div class="text-right">
+            <span class="text-xs font-black text-slate-800 block">${h.distance_km ? h.distance_km.toFixed(1) + ' km away' : 'Nearby'}</span>
+            <span class="text-[11px] text-slate-500 block">~${h.estimated_time_min || 5} min drive</span>
+            <button class="mt-1 bg-cyan-700 text-white text-xs font-bold px-3 py-1 rounded-lg shadow-sm">
+              Book Here →
+            </button>
+  
+        </div>
+
+        </div>
+      `).join('');
+    }
+
+    async function selectGuidedHospital(hospitalId) {
+      try {
+        const res = await fetch(`${API_BASE}/hospitals/${hospitalId}`);
+        guidedHospital = await res.json();
+
+        // Render Summary Card
+        const summaryCard = document.getElementById('guided-summary-card');
+        summaryCard.innerHTML = `
+          <div>
+            <span class="text-[10px] uppercase font-bold text-cyan-600 block">Booking Summary</span>
+            <b class="text-sm font-extrabold text-slate-900">${guidedService.name}</b>
+            <span class="text-xs text-slate-600 block">Hospital: ${guidedHospital.name} (${guidedHospital.city})</span>
+  
+        </div>
+          <div class="text-right">
+            <span class="text-xs text-slate-500 block">Est. Cost:</span>
+            <b class="text-base font-black text-cyan-800">${guidedService.price}</b>
+  
+        </div>
+        `;
+
+        const docSection = document.getElementById('guided-doctor-section');
+        const facilitySection = document.getElementById('guided-facility-timing');
+
+        // Check if doctor needed
+        if (guidedService.requires_doctor) {
+          docSection.classList.remove('hidden');
+          facilitySection.classList.add('hidden');
+          renderGuidedDoctors();
+        } else {
+          docSection.classList.add('hidden');
+          facilitySection.classList.remove('hidden');
+          guidedDoctor = null;
+          guidedSlot = null;
+        }
+
+        goToGuidedStep(4);
+      } catch (err) {
+        alert('Could not load hospital details');
+      }
+    }
+
+    function renderGuidedDoctors() {
+      const container = document.getElementById('guided-doctors-list');
+      const spec = (guidedService.specialty_needed || '').toLowerCase();
+      
+      const doctors = (guidedHospital.doctors || []).filter(d => 
+        !spec || d.specialty.toLowerCase().includes(spec) || d.specialty.toLowerCase().includes('general')
+      );
+
+      const targetDocs = doctors.length ? doctors : guidedHospital.doctors || [];
+
+      if (!targetDocs.length) {
+        container.innerHTML = `<div class="text-xs text-slate-400">General OPD physician will be assigned on arrival.</div>`;
+        return;
+      }
+
+      container.innerHTML = targetDocs.map(d => {
+        const isAvail = d.status === 'available';
+        const slots = d.available_slots || [];
+
+        const slotsHtml = slots.map(s => `
+          <button type="button" onclick="selectGuidedDoctorSlot(${d.id}, '${d.name}', ${s.id}, '${s.slot_time}', this)" class="g-slot-btn text-[11px] font-bold px-2.5 py-1 rounded-lg border border-cyan-300 bg-white hover:bg-cyan-600 hover:text-white transition-colors">
+            ${s.slot_time}
+          </button>
+        `).join('');
+
+        return `
+          <div class="p-2.5 rounded-xl border bg-white border-slate-200 space-y-2">
+            <div class="flex items-center justify-between">
+              <div>
+                <b class="text-xs text-slate-900">${d.name}</b>
+                <span class="text-[11px] text-slate-500 block">${d.specialty} (${d.experience_years} yrs exp)</span>
+      
+        </div>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${isAvail ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'}">
+                ${isAvail ? '🟢 Available' : d.status}
+              </span>
+    
+        </div>
+
+            <div class="flex items-center gap-1.5 flex-wrap pt-1">
+              <span class="text-[10px] text-slate-400 font-semibold mr-1">Select Slot:</span>
+              ${slotsHtml || '<span class="text-[10px] text-slate-400">Direct walk-in available</span>'}
+    
+        </div>
+  
+        </div>
+        `;
+      }).join('');
+    }
+
+    function selectGuidedDoctorSlot(docId, docName, slotId, slotTime, btn) {
+      guidedDoctor = { id: docId, name: docName };
+      guidedSlot = { id: slotId, time: slotTime };
+
+      document.querySelectorAll('.g-slot-btn').forEach(b => {
+        b.className = 'g-slot-btn text-[11px] font-bold px-2.5 py-1 rounded-lg border border-cyan-300 bg-white hover:bg-cyan-600 hover:text-white transition-colors';
+      });
+      btn.className = 'g-slot-btn text-[11px] font-bold px-2.5 py-1 rounded-lg border border-cyan-800 bg-cyan-700 text-white shadow-sm';
+    }
+
+    function selectTimeWindow(windowText, btn) {
+      guidedTimeWindow = windowText;
+      document.querySelectorAll('.window-btn').forEach(b => {
+        b.className = 'window-btn p-2 rounded-lg border border-emerald-300 bg-white font-bold text-emerald-900 hover:bg-emerald-100';
+      });
+      btn.className = 'window-btn p-2 rounded-lg border-2 border-emerald-700 bg-emerald-100 font-black text-emerald-950 shadow-sm';
+    }
+
+    function goToGuidedStep(step) {
+      guidedStep = step;
+      [1, 2, 3, 4].forEach(s => {
+        const el = document.getElementById(`guided-step-${s}`);
+        const ind = document.getElementById(`step-ind-${s}`);
+        if (s === step) {
+          el.classList.remove('hidden');
+          ind.className = 'py-1.5 px-2 rounded-lg bg-cyan-700 text-white';
+        } else if (s < step) {
+          el.classList.add('hidden');
+          ind.className = 'py-1.5 px-2 rounded-lg bg-emerald-100 text-emerald-800 font-bold';
+        } else {
+          el.classList.add('hidden');
+          ind.className = 'py-1.5 px-2 rounded-lg bg-slate-100 text-slate-400';
+        }
+      });
+    }
+
+    function resetGuidedBooking() {
+      guidedCategory = null;
+      guidedService = null;
+      guidedHospital = null;
+      guidedDoctor = null;
+      guidedSlot = null;
+      goToGuidedStep(1);
+    }
+
+    async function submitGuidedCheckupBooking() {
+      if (!guidedHospital || !guidedService) return;
+
+      const name = document.getElementById('guided-patient-name').value.trim();
+      const phone = document.getElementById('guided-patient-phone').value.trim();
+      const notes = document.getElementById('guided-patient-notes').value.trim();
+
+      if (!name || !phone) {
+        alert('Please enter patient name and contact phone number');
+        return;
+      }
+
+      if (guidedService.requires_doctor && (!guidedDoctor || !guidedSlot)) {
+        alert('Please select an available doctor and slot for this consultation');
+        return;
+      }
+
+      const btn = document.getElementById('guided-submit-btn');
+      btn.disabled = true;
+      btn.innerText = 'Confirming Appointment...';
+
+      try {
+        const payload = {
+          hospital_id: guidedHospital.id,
+          service_name: guidedService.name,
+          patient_name: name,
+          patient_phone: phone,
+          doctor_id: guidedDoctor ? guidedDoctor.id : null,
+          slot_id: guidedSlot ? guidedSlot.id : null,
+          preferred_time_window: guidedTimeWindow,
+          notes: notes
+        };
+
+        const res = await fetch(`${API_BASE}/bookings/checkup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Booking failed');
+
+        activeBookings.push(data);
+        localStorage.setItem('medibud_my_holds', JSON.stringify(activeBookings));
+
+        renderActiveHoldCards();
+        alert(`✅ CHECKUP BOOKING CONFIRMED!\n\nReference: ${data.booking_code}\nService: ${guidedService.name}\nHospital: ${guidedHospital.name}\n${guidedDoctor ? 'Doctor: ' + guidedDoctor.name + ' (' + guidedSlot.time + ')' : 'Arrival Window: ' + guidedTimeWindow}\n\nA confirmation has been registered for ${name}.`);
+
+        resetGuidedBooking();
+        switchPatientSubTab('hospitals');
+      } catch (err) {
+        alert(`❌ Booking Failed: ${err.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Confirm Checkup Booking';
+      }
+    }
+
+
+    // --- Active Holds & Bookings Display ---
+    function renderActiveHoldCards() {
+      const container = document.getElementById('active-hold-container');
+      const activeList = activeBookings.filter(b => b.status === 'pending' || b.status === 'confirmed');
+
+      if (!activeList.length) {
+        container.classList.add('hidden');
+        return;
+      }
+
+      container.classList.remove('hidden');
+      container.innerHTML = activeList.map(b => {
+        const isBedHold = b.booking_type === 'bed_hold';
+
+        return `
+          <div class="bg-gradient-to-r ${isBedHold ? 'from-red-600 to-rose-700' : 'from-cyan-800 to-slate-900'} text-white rounded-2xl p-4 shadow-lg flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="bg-white/20 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-wider">
+                  ${isBedHold ? 'ACTIVE BED HOLD' : 'CONFIRMED APPOINTMENT'}
+                </span>
+                <span class="text-xs font-mono font-bold">${b.booking_code}</span>
+      
+        </div>
+              <h4 class="font-extrabold text-base mt-0.5">
+                ${b.hospital_name} ${isBedHold ? '— ' + (b.bed_type || '').toUpperCase() + ' BED' : (b.service_name ? '— ' + b.service_name : '')}
+              </h4>
+              <p class="text-xs text-slate-200">
+                Patient: ${b.patient_name} • ${b.doctor_name ? 'Doctor: ' + b.doctor_name + ' (' + (b.slot_time || '') + ')' : (b.preferred_time_window || 'Arrive with reference code')}
+              </p>
+    
+        </div>
+
+            <div class="flex items-center gap-3">
+              ${isBedHold ? `
+                <div class="text-center bg-black/30 px-3 py-1.5 rounded-xl border border-white/20">
+                  <span class="text-[10px] uppercase font-bold text-red-200 block">Time Left</span>
+                  <span id="countdown-${b.booking_code}" class="text-lg font-black font-mono">--:--</span>
+        
+        </div>
+              ` : ''}
+
+              <div class="flex flex-col gap-1">
+                <a href="tel:${b.hospital_phone}" class="bg-white text-slate-900 text-xs font-black px-3 py-1 rounded-lg text-center shadow">📞 Call Hospital</a>
+                <button onclick="cancelMyHold('${b.booking_code}')" class="text-slate-300 hover:text-white text-[11px] underline">Release / Cancel</button>
+      
+        </div>
+    
+        </div>
+  
+        </div>
+        `;
+      }).join('');
+    }
+
+    function updateHoldCountdowns() {
+      activeBookings.forEach(b => {
+        if (b.status !== 'pending' || !b.hold_expires_at) return;
+        const el = document.getElementById(`countdown-${b.booking_code}`);
+        if (!el) return;
+
+        const diff = Math.max(0, Math.floor((new Date(b.hold_expires_at) - new Date()) / 1000));
+        if (diff <= 0) {
+          el.innerText = 'EXPIRED';
+          b.status = 'expired';
+          localStorage.setItem('medibud_my_holds', JSON.stringify(activeBookings));
+          renderActiveHoldCards();
+          return;
+        }
+
+        const mins = String(Math.floor(diff / 60)).padStart(2, '0');
+        const secs = String(diff % 60).padStart(2, '0');
+        el.innerText = `${mins}:${secs}`;
+      });
+    }
+
+    async function cancelMyHold(code) {
+      if (!confirm('Are you sure you want to cancel this booking?')) return;
+      try {
+        await fetch(`${API_BASE}/bookings/${code}/cancel`, { method: 'POST' });
+        activeBookings = activeBookings.filter(b => b.booking_code !== code);
+        localStorage.setItem('medibud_my_holds', JSON.stringify(activeBookings));
+        renderActiveHoldCards();
+        loadHospitals();
+      } catch (err) {
+        alert('Could not cancel booking');
+      }
+    }
+
+    function scrollToHolds() {
+      const holdContainer = document.getElementById('active-hold-container');
+      if (holdContainer && !holdContainer.classList.contains('hidden')) {
+        holdContainer.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        alert('You do not have any active bookings.');
+      }
+    }
+
+
+    // --- Hospital Admin & Staff Dashboard Logic ---
+    function populateAdminHospitalSelect(hospitals) {
+      const select = document.getElementById('admin-hospital-select');
+      if (!select) return;
+      select.innerHTML = hospitals.map(h => `
+        <option value="${h.id}" ${h.id === currentAdminHospitalId ? 'selected' : ''}>${h.name}</option>
+      `).join('');
+    }
+
+    function onAdminHospitalChange(hId) {
+      currentAdminHospitalId = Number(hId);
+      loadAdminView();
+    }
+
+    async function loadAdminView() {
+      try {
+        const res = await fetch(`${API_BASE}/hospitals/${currentAdminHospitalId}`);
+        const hospital = await res.json();
+
+        // 1-Tap Bed Controls
+        const bedContainer = document.getElementById('admin-bed-controls');
+        const btypes = ['general', 'icu', 'ventilator', 'oxygen'];
+        bedContainer.innerHTML = btypes.map(bt => {
+          const b = hospital.beds[bt] || { total: 0, occupied: 0, held: 0, free: 0 };
+          return `
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-between gap-2">
+              <div>
+                <b class="text-slate-800 text-sm capitalize">${bt} Bed</b>
+                <div class="text-xs text-slate-500">
+                  <span class="font-bold text-emerald-700">${b.free} free</span> / ${b.total} total
+                  ${b.held > 0 ? `<span class="text-amber-600 font-semibold">(${b.held} on 30m hold)</span>` : ''}
+        
+        </div>
+      
+        </div>
+
+              <div class="flex items-center gap-2">
+                <button onclick="adminAdjustBed('${bt}', -1)" class="tap-btn bg-rose-100 hover:bg-rose-200 text-rose-800 w-9 h-9 rounded-xl font-black text-lg border border-rose-300 flex items-center justify-center shadow-sm" title="Occupy 1 bed">−</button>
+                <button onclick="adminAdjustBed('${bt}', 1)" class="tap-btn bg-emerald-100 hover:bg-emerald-200 text-emerald-800 w-9 h-9 rounded-xl font-black text-lg border border-emerald-300 flex items-center justify-center shadow-sm" title="Free/Discharge 1 bed">+</button>
+      
+        </div>
+    
+        </div>
+          `;
+        }).join('');
+
+        // 1-Tap Doctor Status Cycle
+        const docContainer = document.getElementById('admin-doctor-controls');
+        docContainer.innerHTML = (hospital.doctors || []).map(d => {
+          const statusBadge = {
+            available: 'bg-emerald-500 text-white',
+            in_surgery: 'bg-amber-500 text-white',
+            off_duty: 'bg-slate-400 text-white'
+          }[d.status];
+
+          return `
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-between gap-2">
+              <div>
+                <b class="text-slate-800 text-sm">${d.name}</b>
+                <span class="text-slate-500 text-xs block">${d.specialty}</span>
+      
+        </div>
+              <button onclick="adminCycleDoctor(${d.id}, '${d.status}')" class="tap-btn px-3 py-1.5 rounded-xl text-xs font-black shadow-sm ${statusBadge}">
+                ${d.status.toUpperCase()} ⟳
+              </button>
+    
+        </div>
+          `;
+        }).join('') || '<div class="text-xs text-slate-400">No doctors on duty.</div>';
+
+        // Load Queue
+        loadAdminBookingsQueue();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function adminAdjustBed(bedType, delta) {
+      try {
+        const res = await fetch(`${API_BASE}/admin/beds/adjust`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            hospital_id: currentAdminHospitalId,
+            bed_type: bedType,
+            delta: delta
+          })
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          alert(err.detail || 'Could not adjust bed count');
+          return;
+        }
+        loadAdminView();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function adminCycleDoctor(doctorId, currentStatus) {
+      const cycle = { available: 'in_surgery', in_surgery: 'off_duty', off_duty: 'available' };
+      const nextStatus = cycle[currentStatus] || 'available';
+
+      try {
+        await fetch(`${API_BASE}/admin/doctors/${doctorId}/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: nextStatus })
+        });
+        loadAdminView();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function loadAdminBookingsQueue() {
+      const container = document.getElementById('admin-queue-list');
+      try {
+        const res = await fetch(`${API_BASE}/admin/hospitals/${currentAdminHospitalId}/bookings`);
+        const queue = await res.json();
+
+        if (!queue.length) {
+          container.innerHTML = `<div class="p-4 text-center text-xs text-slate-400">No active reservations or queue requests.</div>`;
+          return;
+        }
+
+        container.innerHTML = queue.map(b => `
+          <div class="py-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-900">${b.booking_code}</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase ${b.status === 'pending' ? 'bg-amber-100 text-amber-800' : b.status === 'admitted' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}">
+                  ${b.status}
+                </span>
+                <span class="text-slate-400">${b.booking_type === 'bed_hold' ? '🛏 ' + b.bed_type : (b.service_name || '🩺 Consultation')}</span>
+      
+        </div>
+              <p class="text-slate-600 mt-0.5">Patient: <b>${b.patient_name}</b> (${b.patient_phone}) ${b.emergency_notes ? '— <i>"' + b.emergency_notes + '"</i>' : ''}</p>
+    
+        </div>
+
+            <div>
+              ${b.status === 'pending' && b.booking_type === 'bed_hold' ? `
+                <button onclick="admitPatient(${b.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-3 py-1.5 rounded-lg shadow-sm">
+                  ✓ Check-in & Admit
+                </button>
+              ` : ''}
+    
+        </div>
+  
+        </div>
+        `).join('');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function admitPatient(bookingId) {
+      if (!confirm('Mark patient as arrived and officially admitted?')) return;
+      try {
+        const res = await fetch(`${API_BASE}/admin/bookings/${bookingId}/admit`, { method: 'POST' });
+        if (!res.ok) throw new Error('Admit failed');
+        alert('Patient admitted successfully! Held bed transitioned to Occupied.');
+        loadAdminView();
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    // --- Demo Simulator ---
+    async function checkSimulatorStatus() {
+      try {
+        const res = await fetch(`${API_BASE}/admin/simulator/status`);
+        const data = await res.json();
+        const cb = document.getElementById('sim-checkbox');
+        if (cb) cb.checked = data.is_running;
+      } catch (e) {}
+    }
+
+    async function toggleSimulator(enable) {
+      try {
+        await fetch(`${API_BASE}/admin/simulator/toggle?enable=${enable}`, { method: 'POST' });
+      } catch (e) {}
+    }
+
+    // --- Realtime WebSocket Listener ---
+    function initWebSocket() {
+      const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${proto}//${window.location.host}/ws/live`;
+
+      try {
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          document.getElementById('ws-status').innerText = 'Live Telemetry Active';
+        };
+
+        ws.onmessage = (event) => {
+          const msg = JSON.parse(event.data);
+          
+          if (msg.event === 'bed_update') {
+            const target = hospitalsData.find(h => h.id === msg.hospital_id);
+            if (target && target.beds && target.beds[msg.bed_type]) {
+              target.beds[msg.bed_type].free = msg.free;
+              target.beds[msg.bed_type].total = msg.total;
+              target.beds[msg.bed_type].occupied = msg.occupied;
+              target.beds[msg.bed_type].held = msg.held;
+              target.last_updated_minutes_ago = 0;
+              target.is_stale = false;
+              renderHospitalsList(hospitalsData);
+            }
+            if (currentTab === 'admin' && currentAdminHospitalId === msg.hospital_id) {
+              loadAdminView();
+            }
+          } else if (msg.event === 'doctor_update') {
+            if (currentTab === 'admin' && currentAdminHospitalId === msg.hospital_id) {
+              loadAdminView();
+            }
+          }
+        };
+
+        ws.onclose = () => {
+          document.getElementById('ws-status').innerText = 'Reconnecting Telemetry...';
+          setTimeout(initWebSocket, 3000);
+        };
+      } catch (err) {
+        console.error('WS Error:', err);
+      }
+    }
+  </script>
+</body>
+</html>
