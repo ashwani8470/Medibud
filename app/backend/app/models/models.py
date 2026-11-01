@@ -318,6 +318,48 @@ class Booking(Base):
     hospital: Mapped[Hospital] = relationship(back_populates="bookings")
     doctor: Mapped[Optional[Doctor]] = relationship(back_populates="bookings")
     slot: Mapped[Optional[DoctorSlot]] = relationship(back_populates="booking")
+    prearrival_requests: Mapped[List[PreArrivalRequest]] = relationship(
+        back_populates="booking", cascade="all, delete-orphan", order_by="PreArrivalRequest.id"
+    )
+
+
+# -------------------------------------------------------------------------
+# 7b. Pre-arrival requests (things the patient asks the hospital to prepare)
+# -------------------------------------------------------------------------
+PREARRIVAL_TYPES = (
+    "ventilator",
+    "oxygen",
+    "trauma_team",
+    "ambulance",
+    "blood_check",
+    "medicine_kit",
+)
+
+
+class PreArrivalRequest(Base):
+    __tablename__ = "prearrival_requests"
+    __table_args__ = (
+        Index("idx_prearrival_booking_type", "booking_id", "request_type", unique=True),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    booking_id: Mapped[int] = mapped_column(ForeignKey("bookings.id", ondelete="CASCADE"), nullable=False)
+    request_type: Mapped[str] = mapped_column(String(30), nullable=False)
+    detail: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)  # blood group / medicines
+    # requested -> ready (set by hospital staff) | cancelled (by patient)
+    status: Mapped[str] = mapped_column(String(20), default="requested", nullable=False)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+
+    booking: Mapped[Booking] = relationship(back_populates="prearrival_requests")
 
 
 # -------------------------------------------------------------------------

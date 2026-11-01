@@ -12,6 +12,8 @@ from app.models.models import (
     BookingType,
     BookingStatus,
     BedAuditLog,
+    PreArrivalRequest,
+    PREARRIVAL_TYPES,
 )
 
 __all__ = [
@@ -28,4 +30,6 @@ __all__ = [
     "BookingType",
     "BookingStatus",
     "BedAuditLog",
+    "PreArrivalRequest",
+    "PREARRIVAL_TYPES",
 ]

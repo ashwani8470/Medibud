@@ -14,6 +14,8 @@ from app.schemas.booking import (
     FacilityCheckupRequest,
     BookingResponse,
     BookingStatusUpdateRequest,
+    PreArrivalCreate,
+    PreArrivalResponse,
 )
 
 __all__ = [
@@ -33,4 +35,6 @@ __all__ = [
     "FacilityCheckupRequest",
     "BookingResponse",
     "BookingStatusUpdateRequest",
+    "PreArrivalCreate",
+    "PreArrivalResponse",
 ]

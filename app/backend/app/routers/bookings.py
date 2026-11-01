@@ -4,12 +4,15 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models.models import Booking, BookingType, BookingStatus, User, HospitalBed
+from app.models.models import Booking, BookingType, BookingStatus, User, HospitalBed, PreArrivalRequest
 from app.schemas.booking import (
     BedHoldRequest,
     DoctorAppointmentRequest,
     FacilityCheckupRequest,
     BookingResponse,
+    PreArrivalCreate,
+    PreArrivalResponse,
+    BLOOD_GROUPS,
 )
 from app.services.booking_service import (
     reserve_bed_hold,
@@ -52,6 +55,7 @@ def format_booking_response(b: Booking) -> dict:
         "patient_phone": b.patient_phone,
         "emergency_notes": b.emergency_notes,
         "created_at": b.created_at,
+        "prearrival_requests": list(b.prearrival_requests or []),
     }
 
 
@@ -254,7 +258,107 @@ async def cancel_booking(
 
     booking.status = BookingStatus.CANCELLED
     booking.released_at = datetime.now(timezone.utc)
+    for r in booking.prearrival_requests:
+        if r.status != "cancelled":
+            r.status = "cancelled"
     db.commit()
     db.refresh(booking)
 
     return format_booking_response(booking)
+
+
+# ------------------------------------------------------------------
+# Pre-arrival requests: the patient asks the hospital to prepare things
+# (ventilator, oxygen, trauma team, ambulance, blood check, medicine kit)
+# before they reach the hospital. Staff mark each one "ready".
+# ------------------------------------------------------------------
+def _get_booking_or_404(db: Session, booking_code: str) -> Booking:
+    booking = db.query(Booking).filter(Booking.booking_code == booking_code.upper()).first()
+    if not booking:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking code not found")
+    return booking
+
+
+def _require_open_bed_hold(booking: Booking) -> None:
+    if booking.booking_type != BookingType.BED_HOLD:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Pre-arrival requests are only available for emergency bed holds",
+        )
+    if booking.status not in (BookingStatus.PENDING, BookingStatus.CONFIRMED):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Booking is {booking.status.value}; requests can no longer be changed",
+        )
+
+
+@router.get("/{booking_code}/prearrival", response_model=List[PreArrivalResponse])
+def list_prearrival_requests(booking_code: str, db: Session = Depends(get_db)):
+    return _get_booking_or_404(db, booking_code).prearrival_requests
+
+
+@router.post("/{booking_code}/prearrival", response_model=List[PreArrivalResponse])
+async def create_prearrival_request(
+    booking_code: str,
+    payload: PreArrivalCreate,
+    db: Session = Depends(get_db),
+):
+    """Request (or re-request) one preparation item. Returns the full updated list."""
+    booking = _get_booking_or_404(db, booking_code)
+    _require_open_bed_hold(booking)
+
+    detail = (payload.detail or "").strip() or None
+    if payload.request_type == "blood_check":
+        if detail not in BLOOD_GROUPS:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Choose a valid blood group",
+            )
+    elif payload.request_type == "medicine_kit":
+        if not detail:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Enter the medicines you need prepared",
+            )
+    else:
+        detail = None
+
+    existing = next((r for r in booking.prearrival_requests if r.request_type == payload.request_type), None)
+    if existing:
+        existing.status = "requested"
+        existing.detail = detail
+    else:
+        db.add(PreArrivalRequest(booking_id=booking.id, request_type=payload.request_type, detail=detail))
+    db.commit()
+    db.refresh(booking)
+
+    await ws_manager.broadcast({
+        "event": "prearrival_update",
+        "hospital_id": booking.hospital_id,
+        "booking_code": booking.booking_code,
+    })
+    return booking.prearrival_requests
+
+
+@router.post("/{booking_code}/prearrival/{request_type}/cancel", response_model=List[PreArrivalResponse])
+async def cancel_prearrival_request(
+    booking_code: str,
+    request_type: str,
+    db: Session = Depends(get_db),
+):
+    booking = _get_booking_or_404(db, booking_code)
+    _require_open_bed_hold(booking)
+
+    req = next((r for r in booking.prearrival_requests if r.request_type == request_type), None)
+    if not req or req.status == "cancelled":
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No active request of this type")
+    req.status = "cancelled"
+    db.commit()
+    db.refresh(booking)
+
+    await ws_manager.broadcast({
+        "event": "prearrival_update",
+        "hospital_id": booking.hospital_id,
+        "booking_code": booking.booking_code,
+    })
+    return booking.prearrival_requests

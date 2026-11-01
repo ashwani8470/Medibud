@@ -697,6 +697,53 @@
     </div>
   </div>
 
+  <!-- ======================================================== -->
+  <!-- 🩺 PRE-ARRIVAL PREPARATION (shown after an emergency hold) -->
+  <!-- ======================================================== -->
+  <div id="prearrival-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-start justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-white max-w-md w-full rounded-3xl shadow-2xl border border-slate-200 my-auto overflow-hidden">
+
+      <!-- Header: hold confirmed -->
+      <div class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white p-4">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <span class="bg-white/20 text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-wider inline-flex items-center gap-1">
+              <i class="fa-solid fa-circle-check"></i> Bed reserved
+            </span>
+            <h3 id="pa-hospital" class="font-black text-base mt-1 leading-tight"></h3>
+            <p class="text-xs text-emerald-100 mt-0.5">Code <span id="pa-code" class="font-mono font-bold"></span></p>
+          </div>
+          <div class="text-center bg-black/25 px-3 py-1.5 rounded-xl border border-white/20 shrink-0">
+            <span class="text-[10px] uppercase font-bold text-emerald-100 block">Hold left</span>
+            <span id="pa-countdown" class="text-lg font-black font-mono">--:--</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 space-y-3">
+        <div>
+          <h4 class="font-black text-slate-900 text-sm">Get the hospital ready before you arrive</h4>
+          <p class="text-xs text-slate-500 mt-0.5">Request what the patient needs. The hospital team confirms each item and you see its status live.</p>
+          <p id="pa-summary" class="text-[11px] font-bold text-sky-700 mt-1"></p>
+        </div>
+
+        <div id="pa-list" class="space-y-2.5"></div>
+
+        <p class="text-[10px] text-slate-400 leading-snug">Requests are preparation notes for the hospital team. They do not replace a doctor's assessment. In a life-threatening emergency, call the hospital or your local emergency number.</p>
+
+        <button onclick="cancelPrearrivalHold()" class="w-full py-2.5 rounded-xl border border-red-300 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-black flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-xmark"></i> Cancel Emergency Bed Hold (Release Bed)
+        </button>
+
+        <div class="flex items-center justify-center gap-3 text-[11px] text-slate-500 pb-1">
+          <button onclick="closePrearrival()" class="underline hover:text-slate-800"><i class="fa-solid fa-house"></i> Return to Home Dashboard</button>
+          <span>&bull;</span>
+          <button onclick="closePrearrival(); switchPatientSubTab('hospitals')" class="underline hover:text-slate-800">Browse All Hospitals</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Download App Modal -->
   <div id="download-app-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white max-w-sm w-full rounded-3xl shadow-2xl p-6 border border-slate-100 space-y-4 text-center">
@@ -1699,7 +1746,7 @@
         closeEmergencyMode();
         renderActiveHoldCards();
         loadHospitals();
-        alert(`🚨 EMERGENCY BED RESERVED!\nBooking Code: ${data.booking_code}\nHold Time: 30 minutes guaranteed.\nEmergency Desk at ${selectedHospitalForEmergency.name} has been notified of your arrival.`);
+        openPrearrival(data.booking_code);
       } catch (err) {
         alert(`❌ Hold Failed: ${err.message}`);
       } finally {
@@ -2017,6 +2064,166 @@
     }
 
 
+
+    // ============================================================
+    // 🩺 PRE-ARRIVAL PREPARATION (after an emergency bed hold)
+    // Patient asks the hospital to prepare things; staff mark them ready.
+    // ============================================================
+    const PREARRIVAL_OPTIONS = [
+      { type: 'ventilator',   icon: 'fa-lungs',        title: 'Ventilator Ready',                 desc: 'Respiratory therapist preps mechanical ventilator at bed' },
+      { type: 'oxygen',       icon: 'fa-wind',         title: 'Oxygen Cylinder / Flowmeter Ready', desc: 'High-flow oxygen mask and flowmeter setup in triage' },
+      { type: 'trauma_team',  icon: 'fa-user-nurse',   title: 'Stretcher & Trauma Team at Gate',  desc: 'Dedicated emergency team waiting at hospital emergency ramp' },
+      { type: 'ambulance',    icon: 'fa-truck-medical', title: 'Emergency Ambulance Pickup',      desc: 'ALS/BLS ambulance dispatched with GPS coordination' },
+      { type: 'blood_check',  icon: 'fa-droplet',      title: 'Blood Group Availability Check',   desc: 'Verify cross-match blood units in hospital blood bank', input: 'blood' },
+      { type: 'medicine_kit', icon: 'fa-pills',        title: 'Medicine Kit Preparation',         desc: 'Pharmacist stages patient-reported routine or emergency meds', input: 'medicine' },
+    ];
+    const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+    let prearrivalCode = null;
+    const prearrivalDraft = { blood_check: 'O+', medicine_kit: '' }; // typed values not yet requested
+
+    function prearrivalBooking() {
+      return activeBookings.find(x => x.booking_code === prearrivalCode);
+    }
+
+    function openPrearrival(code) {
+      prearrivalCode = code;
+      document.getElementById('prearrival-modal').classList.remove('hidden');
+      renderPrearrival();
+      updatePrearrivalCountdown();
+      refreshPrearrival(code);
+    }
+
+    function closePrearrival() {
+      prearrivalCode = null;
+      document.getElementById('prearrival-modal').classList.add('hidden');
+    }
+
+    function renderPrearrival() {
+      const b = prearrivalBooking();
+      if (!b) { closePrearrival(); return; }
+      document.getElementById('pa-code').innerText = b.booking_code;
+      document.getElementById('pa-hospital').innerText = `${b.hospital_name} — ${(b.bed_type || '').toUpperCase()} bed`;
+
+      const reqs = {};
+      (b.prearrival_requests || []).forEach(r => { if (r.status !== 'cancelled') reqs[r.request_type] = r; });
+      const open = Object.values(reqs).filter(r => r.status === 'requested').length;
+      const ready = Object.values(reqs).filter(r => r.status === 'ready').length;
+      document.getElementById('pa-summary').innerText =
+        (open || ready) ? `${open} requested • ${ready} ready at the hospital` : '';
+
+      document.getElementById('pa-list').innerHTML = PREARRIVAL_OPTIONS.map(o => {
+        const r = reqs[o.type];
+        const isReq = r && r.status === 'requested';
+        const isReady = r && r.status === 'ready';
+        const locked = !!r;
+
+        let extra = '';
+        if (o.input === 'blood') {
+          const val = r ? r.detail : prearrivalDraft.blood_check;
+          extra = `
+            <div class="mt-2 flex items-center gap-2 text-xs text-slate-600">
+              <span>Select Blood Group:</span>
+              <select ${locked ? 'disabled' : ''} onchange="prearrivalDraft.blood_check = this.value"
+                class="border border-slate-300 rounded-md px-2 py-1 bg-white font-bold text-slate-800 disabled:bg-slate-100">
+                ${BLOOD_GROUPS.map(g => `<option value="${g}" ${g === val ? 'selected' : ''}>${g}</option>`).join('')}
+              </select>
+            </div>`;
+        } else if (o.input === 'medicine') {
+          const val = r ? r.detail : prearrivalDraft.medicine_kit;
+          extra = `
+            <input type="text" maxlength="200" ${locked ? 'disabled' : ''} value="${esc(val || '')}"
+              oninput="prearrivalDraft.medicine_kit = this.value"
+              placeholder="E.g. Aspirin 75mg, Inhaler, Insulin..."
+              class="mt-2 w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-sky-500 disabled:bg-slate-100" />
+            <p class="mt-1.5 text-[10px] text-slate-500 leading-snug">Note: Hospital pharmacist verifies all drugs with the attending ER physician. MediBud never prescribes drugs.</p>`;
+        }
+
+        let action;
+        if (isReady) {
+          action = `<span class="text-[11px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5 whitespace-nowrap"><i class="fa-solid fa-circle-check"></i> Ready</span>`;
+        } else if (isReq) {
+          action = `
+            <span class="text-[10px] font-bold text-amber-600 flex items-center gap-1"><i class="fa-regular fa-clock"></i> Requested</span>
+            <button onclick="cancelPrearrival('${o.type}')" class="text-[11px] font-black text-red-700 bg-red-50 hover:bg-red-100 border border-red-300 rounded-lg px-2.5 py-1.5 whitespace-nowrap">× Cancel Request</button>`;
+        } else {
+          action = `<button onclick="submitPrearrival('${o.type}')" class="text-[11px] font-black text-red-700 bg-red-50 hover:bg-red-100 border border-red-300 rounded-lg px-3 py-2 whitespace-nowrap">+ Request</button>`;
+        }
+
+        return `
+          <div class="rounded-xl border p-3 ${r ? 'border-sky-400 bg-sky-50/60 ring-1 ring-sky-300' : 'border-slate-200 bg-white'}">
+            <div class="flex items-start gap-3">
+              <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center shrink-0 text-sm"><i class="fa-solid ${o.icon}"></i></div>
+              <div class="flex-1 min-w-0">
+                <h5 class="font-extrabold text-[13px] text-slate-900 leading-tight">${o.title}</h5>
+                <p class="text-[11px] text-slate-500 leading-snug mt-0.5">${o.desc}</p>
+              </div>
+              <div class="flex flex-col items-end gap-1 shrink-0">${action}</div>
+            </div>
+            ${extra}
+          </div>`;
+      }).join('');
+    }
+
+    function setPrearrivalList(code, list) {
+      const b = activeBookings.find(x => x.booking_code === code);
+      if (!b) return;
+      b.prearrival_requests = list;
+      localStorage.setItem('medibud_my_holds', JSON.stringify(activeBookings));
+      if (prearrivalCode === code) renderPrearrival();
+      renderActiveHoldCards();
+    }
+
+    async function prearrivalCall(path, body) {
+      const code = prearrivalCode;
+      try {
+        const res = await fetch(`${API_BASE}${path}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: body ? JSON.stringify(body) : undefined
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'Request failed');
+        setPrearrivalList(code, data);
+      } catch (err) {
+        alert(`❌ ${err.message}`);
+      }
+    }
+
+    function submitPrearrival(type) {
+      let detail = null;
+      if (type === 'blood_check') detail = prearrivalDraft.blood_check || 'O+';
+      if (type === 'medicine_kit') {
+        detail = (prearrivalDraft.medicine_kit || '').trim();
+        if (!detail) { alert('Enter the medicines you need prepared'); return; }
+      }
+      return prearrivalCall(`/bookings/${prearrivalCode}/prearrival`, detail ? { request_type: type, detail } : { request_type: type });
+    }
+
+    function cancelPrearrival(type) {
+      return prearrivalCall(`/bookings/${prearrivalCode}/prearrival/${type}/cancel`);
+    }
+
+    async function refreshPrearrival(code) {
+      try {
+        const res = await fetch(`${API_BASE}/bookings/${code}/prearrival`);
+        if (res.ok) setPrearrivalList(code, await res.json());
+      } catch (e) { /* offline: keep what we have */ }
+    }
+
+    async function cancelPrearrivalHold() {
+      const code = prearrivalCode;
+      await cancelMyHold(code);
+      if (!activeBookings.some(b => b.booking_code === code)) closePrearrival();
+    }
+
+    function updatePrearrivalCountdown() {
+      const b = prearrivalBooking();
+      const el = document.getElementById('pa-countdown');
+      if (!b || !el || !b.hold_expires_at) return;
+      const diff = Math.max(0, Math.floor((new Date(b.hold_expires_at) - new Date()) / 1000));
+      el.innerText = diff <= 0 ? 'EXPIRED' : `${String(Math.floor(diff / 60)).padStart(2, '0')}:${String(diff % 60).padStart(2, '0')}`;
+    }
+
     // --- Active Holds & Bookings Display ---
     function renderActiveHoldCards() {
       const container = document.getElementById('active-hold-container');
@@ -2061,6 +2268,7 @@
 
               <div class="flex flex-col gap-1">
                 <a href="tel:${b.hospital_phone}" class="bg-white text-slate-900 text-xs font-black px-3 py-1 rounded-lg text-center shadow">📞 Call Hospital</a>
+                ${isBedHold ? `<button onclick="openPrearrival('${b.booking_code}')" class="bg-emerald-400 text-emerald-950 text-xs font-black px-3 py-1 rounded-lg text-center shadow">🩺 Prepare arrival${(b.prearrival_requests || []).filter(r => r.status !== 'cancelled').length ? ' (' + (b.prearrival_requests || []).filter(r => r.status !== 'cancelled').length + ')' : ''}</button>` : ''}
                 <button onclick="cancelMyHold('${b.booking_code}')" class="text-slate-300 hover:text-white text-[11px] underline">Release / Cancel</button>
       
         </div>
@@ -2091,6 +2299,7 @@
         const secs = String(diff % 60).padStart(2, '0');
         el.innerText = `${mins}:${secs}`;
       });
+      updatePrearrivalCountdown();
     }
 
     async function cancelMyHold(code) {
@@ -2234,6 +2443,36 @@
       }
     }
 
+    const PREARRIVAL_LABELS = {
+      ventilator: 'Ventilator', oxygen: 'Oxygen + flowmeter', trauma_team: 'Stretcher & trauma team at gate',
+      ambulance: 'Ambulance pickup', blood_check: 'Blood check', medicine_kit: 'Medicine kit'
+    };
+
+    function adminPrearrivalHtml(b) {
+      const reqs = (b.prearrival_requests || []).filter(r => r.status !== 'cancelled');
+      if (!reqs.length || !['pending', 'confirmed'].includes(b.status)) return '';
+      return `
+        <div class="mt-1.5 flex flex-wrap gap-1.5">
+          ${reqs.map(r => `
+            <span class="inline-flex items-center gap-1.5 border rounded-lg px-2 py-1 ${r.status === 'ready' ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-amber-300 bg-amber-50 text-amber-900'}">
+              <b>${esc(PREARRIVAL_LABELS[r.request_type] || r.request_type)}</b>${r.detail ? ' · ' + esc(r.detail) : ''}
+              ${r.status === 'ready'
+                ? '<span class="font-black">✓ Ready</span>'
+                : `<button onclick="markPrearrivalReady(${r.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-2 py-0.5 rounded">Mark ready</button>`}
+            </span>`).join('')}
+        </div>`;
+    }
+
+    async function markPrearrivalReady(id) {
+      try {
+        const res = await fetch(`${API_BASE}/admin/prearrival/${id}/status?status=ready`, { method: 'POST' });
+        if (!res.ok) throw new Error('Could not update request');
+        loadAdminBookingsQueue();
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
     async function loadAdminBookingsQueue() {
       const container = document.getElementById('admin-queue-list');
       try {
@@ -2257,6 +2496,7 @@
       
         </div>
               <p class="text-slate-600 mt-0.5">Patient: <b>${b.patient_name}</b> (${b.patient_phone}) ${b.emergency_notes ? '— <i>"' + b.emergency_notes + '"</i>' : ''}</p>
+              ${adminPrearrivalHtml(b)}
     
         </div>
 
@@ -2332,6 +2572,11 @@
             }
             if (currentTab === 'admin' && currentAdminHospitalId === msg.hospital_id) {
               loadAdminView();
+            }
+          } else if (msg.event === 'prearrival_update') {
+            if (activeBookings.some(b => b.booking_code === msg.booking_code)) refreshPrearrival(msg.booking_code);
+            if (currentTab === 'admin' && currentAdminHospitalId === msg.hospital_id) {
+              loadAdminBookingsQueue();
             }
           } else if (msg.event === 'doctor_update') {
             if (currentTab === 'admin' && currentAdminHospitalId === msg.hospital_id) {

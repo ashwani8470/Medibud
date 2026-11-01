@@ -271,3 +271,78 @@ def test_admin_requests_need_super_admin_then_new_admin_can_approve(client):
 def test_pending_admin_cannot_approve_anything(client):
     r, p = _staff_signup(client, 16, role="hospital_admin", hospital_id=1)
     assert _login(client, p["email"], p["password"]).status_code == 403   # no token => no approval power
+
+
+# ------------------------------------------------------------------
+# Pre-arrival requests
+# ------------------------------------------------------------------
+def _new_bed_hold(client, hospital_id=1, bed_type="general"):
+    res = client.post("/api/bookings/bed-hold", json={
+        "hospital_id": hospital_id,
+        "bed_type": bed_type,
+        "patient_name": "Prearrival Patient",
+        "patient_phone": "+919876500001",
+        "emergency_notes": "test",
+    })
+    if res.status_code != 201:
+        pytest.skip("no free bed available to hold in seed data")
+    return res.json()
+
+
+def test_prearrival_request_flow(client):
+    booking = _new_bed_hold(client)
+    code = booking["booking_code"]
+    assert booking["prearrival_requests"] == []
+
+    # request ventilator
+    res = client.post(f"/api/bookings/{code}/prearrival", json={"request_type": "ventilator"})
+    assert res.status_code == 200
+    assert [r["request_type"] for r in res.json()] == ["ventilator"]
+    assert res.json()[0]["status"] == "requested"
+
+    # blood check needs a valid group, medicine kit needs text
+    assert client.post(f"/api/bookings/{code}/prearrival", json={"request_type": "blood_check"}).status_code == 422
+    assert client.post(f"/api/bookings/{code}/prearrival",
+                       json={"request_type": "blood_check", "detail": "Z+"}).status_code == 422
+    assert client.post(f"/api/bookings/{code}/prearrival", json={"request_type": "medicine_kit"}).status_code == 422
+    ok = client.post(f"/api/bookings/{code}/prearrival", json={"request_type": "blood_check", "detail": "O+"})
+    assert ok.status_code == 200
+    ok = client.post(f"/api/bookings/{code}/prearrival",
+                     json={"request_type": "medicine_kit", "detail": "Aspirin 75mg"})
+    assert len(ok.json()) == 3
+
+    # unknown type rejected
+    assert client.post(f"/api/bookings/{code}/prearrival", json={"request_type": "pizza"}).status_code == 422
+
+    # staff mark ventilator ready
+    vent = next(r for r in ok.json() if r["request_type"] == "ventilator")
+    mark = client.post(f"/api/admin/prearrival/{vent['id']}/status?status=ready")
+    assert mark.status_code == 200
+    listed = client.get(f"/api/bookings/{code}/prearrival").json()
+    assert next(r for r in listed if r["request_type"] == "ventilator")["status"] == "ready"
+
+    # patient cancels oxygen-less item: cancel blood check, then re-request it
+    c = client.post(f"/api/bookings/{code}/prearrival/blood_check/cancel")
+    assert c.status_code == 200
+    assert next(r for r in c.json() if r["request_type"] == "blood_check")["status"] == "cancelled"
+    again = client.post(f"/api/bookings/{code}/prearrival", json={"request_type": "blood_check", "detail": "A-"})
+    row = next(r for r in again.json() if r["request_type"] == "blood_check")
+    assert row["status"] == "requested" and row["detail"] == "A-"
+    assert len(again.json()) == 3  # re-request reuses the row, no duplicates
+
+    # staff can't un-cancel a cancelled request
+    client.post(f"/api/bookings/{code}/prearrival/blood_check/cancel")
+    cancelled = next(r for r in client.get(f"/api/bookings/{code}/prearrival").json()
+                     if r["request_type"] == "blood_check")
+    assert client.post(f"/api/admin/prearrival/{cancelled['id']}/status?status=ready").status_code == 400
+
+    # cancelling the hold cancels everything and locks further changes
+    assert client.post(f"/api/bookings/{code}/cancel").status_code == 200
+    after = client.get(f"/api/bookings/{code}").json()
+    assert all(r["status"] == "cancelled" for r in after["prearrival_requests"])
+    assert client.post(f"/api/bookings/{code}/prearrival", json={"request_type": "oxygen"}).status_code == 400
+
+
+def test_prearrival_only_for_bed_holds(client):
+    res = client.get("/api/bookings/NOPE-000000/prearrival")
+    assert res.status_code == 404

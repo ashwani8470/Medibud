@@ -14,6 +14,7 @@ from app.models.models import (
     BookingType,
     BookingStatus,
     BedAuditLog,
+    PreArrivalRequest,
 )
 from app.schemas.hospital import BedAdjustmentRequest, DoctorStatusUpdateRequest
 from app.schemas.booking import BookingResponse
@@ -242,3 +243,27 @@ async def admit_held_patient(
             })
 
     return format_booking_response(booking)
+
+
+@router.post("/prearrival/{request_id}/status")
+async def set_prearrival_status(
+    request_id: int,
+    new_status: str = Query(..., alias="status", pattern="^(requested|ready)$"),
+    db: Session = Depends(get_db),
+):
+    """Hospital staff mark a patient's pre-arrival request as 'ready' (or back to 'requested')."""
+    req = db.query(PreArrivalRequest).filter(PreArrivalRequest.id == request_id).first()
+    if not req:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Request not found")
+    if req.status == "cancelled":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Request was cancelled by the patient")
+
+    req.status = new_status
+    db.commit()
+
+    await ws_manager.broadcast({
+        "event": "prearrival_update",
+        "hospital_id": req.booking.hospital_id,
+        "booking_code": req.booking.booking_code,
+    })
+    return {"status": "success", "request_id": req.id, "request_status": req.status}

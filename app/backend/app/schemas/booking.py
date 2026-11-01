@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Literal, Optional
 from datetime import datetime
 from pydantic import BaseModel, Field, ConfigDict
 from app.models.models import BedType, BookingType, BookingStatus
@@ -32,6 +32,26 @@ class FacilityCheckupRequest(BaseModel):
     notes: Optional[str] = None
 
 
+PreArrivalType = Literal["ventilator", "oxygen", "trauma_team", "ambulance", "blood_check", "medicine_kit"]
+BLOOD_GROUPS = ("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
+
+
+class PreArrivalCreate(BaseModel):
+    request_type: PreArrivalType
+    # blood group for blood_check, medicine names for medicine_kit
+    detail: Optional[str] = Field(None, max_length=200)
+
+
+class PreArrivalResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    request_type: str
+    detail: Optional[str] = None
+    status: str
+    updated_at: datetime
+
+
 class BookingResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -59,6 +79,7 @@ class BookingResponse(BaseModel):
     patient_phone: str
     emergency_notes: Optional[str] = None
     created_at: datetime
+    prearrival_requests: List[PreArrivalResponse] = []
 
 
 class BookingStatusUpdateRequest(BaseModel):
