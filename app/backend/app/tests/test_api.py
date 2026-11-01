@@ -135,3 +135,139 @@ def test_admin_requires_login_when_enforced(client, monkeypatch):
         "full_name": "Eve", "email": "eve@x.com", "phone": "9999999999",
         "password": "secret123", "role": "super_admin", "hospital_id": 1})
     assert res.status_code == 403
+
+
+# ---------------- Staff approval workflow ----------------
+def _login(client, user, pw):
+    r = client.post("/api/auth/login", json={"username": user, "password": pw})
+    return r
+
+
+def _super_headers(client):
+    tok = _login(client, "superadmin@medibud.com", "superadmin123").json()["access_token"]
+    return {"Authorization": f"Bearer {tok}"}
+
+
+def _staff_signup(client, n, role="hospital_admin", hospital_id=1):
+    payload = {
+        "email": f"staff{n}@example.com", "phone": f"+9188000{n:05d}", "password": "secret123",
+        "full_name": f"Staff {n}", "role": role, "hospital_id": hospital_id,
+    }
+    r = client.post("/api/auth/register", json=payload)
+    return r, payload
+
+
+def test_staff_signup_is_pending_and_cannot_login(client):
+    r, p = _staff_signup(client, 1)
+    assert r.status_code == 201
+    assert r.json()["approval_status"] == "pending"
+    login = _login(client, p["email"], p["password"])
+    assert login.status_code == 403
+    assert "awaiting approval" in login.json()["detail"]
+
+
+def test_wrong_password_does_not_reveal_pending(client):
+    _, p = _staff_signup(client, 2)
+    assert _login(client, p["email"], "wrong-password").status_code == 401
+
+
+def test_approval_endpoints_need_admin(client):
+    assert client.get("/api/auth/staff-requests").status_code == 401
+    patient = _login(client, "patient@medibud.com", "password123").json()["access_token"]
+    r = client.get("/api/auth/staff-requests", headers={"Authorization": f"Bearer {patient}"})
+    assert r.status_code == 403
+    r = client.post("/api/auth/staff-requests/1/approve", headers={"Authorization": f"Bearer {patient}"})
+    assert r.status_code == 403
+
+
+def test_super_admin_can_approve_then_staff_logs_in(client):
+    r, p = _staff_signup(client, 3, role="doctor")
+    uid = r.json()["id"]
+    h = _super_headers(client)
+    pending = client.get("/api/auth/staff-requests", headers=h).json()
+    assert any(x["id"] == uid and x["hospital_name"] for x in pending)
+    ok = client.post(f"/api/auth/staff-requests/{uid}/approve", headers=h)
+    assert ok.status_code == 200 and ok.json()["approval_status"] == "approved"
+    login = _login(client, p["email"], p["password"])
+    assert login.status_code == 200
+    assert login.json()["hospital_id"] == 1
+    # already handled
+    assert client.post(f"/api/auth/staff-requests/{uid}/approve", headers=h).status_code == 400
+
+
+def test_rejected_staff_cannot_login(client):
+    r, p = _staff_signup(client, 4)
+    uid = r.json()["id"]
+    h = _super_headers(client)
+    assert client.post(f"/api/auth/staff-requests/{uid}/reject", headers=h).status_code == 200
+    login = _login(client, p["email"], p["password"])
+    assert login.status_code == 403
+    assert "not approved" in login.json()["detail"]
+
+
+def test_cannot_self_register_super_admin(client):
+    r = client.post("/api/auth/register", json={
+        "email": "evil@example.com", "phone": "+918800099999", "password": "secret123",
+        "full_name": "Evil Admin", "role": "super_admin", "hospital_id": 1,
+    })
+    assert r.status_code == 403
+
+
+def test_patient_signup_still_instant(client):
+    r = client.post("/api/auth/register", json={
+        "email": "newpatient@example.com", "phone": "+918800011111", "password": "secret123",
+        "full_name": "New Patient", "role": "patient",
+    })
+    assert r.status_code == 201 and r.json()["approval_status"] == "approved"
+    assert _login(client, "newpatient@example.com", "secret123").status_code == 200
+
+
+# ---------------- Hospital Staff vs Admin (separate roles, hierarchical approval) ----------------
+def _hosp_admin_headers(client):
+    tok = _login(client, "admin@lifeline.com", "admin123").json()["access_token"]
+    return {"Authorization": f"Bearer {tok}"}
+
+
+def test_hospital_staff_is_its_own_role_and_starts_pending(client):
+    r, p = _staff_signup(client, 10, role="hospital_staff")
+    assert r.status_code == 201
+    assert r.json()["role"] == "hospital_staff" and r.json()["approval_status"] == "pending"
+    assert _login(client, p["email"], p["password"]).status_code == 403
+
+
+def test_hospital_admin_approves_staff_of_own_hospital(client):
+    r, p = _staff_signup(client, 11, role="hospital_staff", hospital_id=1)
+    uid = r.json()["id"]
+    h = _hosp_admin_headers(client)
+    assert any(x["id"] == uid for x in client.get("/api/auth/staff-requests", headers=h).json())
+    ok = client.post(f"/api/auth/staff-requests/{uid}/approve", headers=h)
+    assert ok.status_code == 200
+    login = _login(client, p["email"], p["password"])
+    assert login.status_code == 200 and login.json()["role"] == "hospital_staff"
+    assert login.json()["hospital_id"] == 1
+
+
+def test_hospital_admin_cannot_review_other_hospital_or_admin_requests(client):
+    other, _ = _staff_signup(client, 12, role="hospital_staff", hospital_id=2)
+    new_admin, _ = _staff_signup(client, 13, role="hospital_admin", hospital_id=1)
+    h = _hosp_admin_headers(client)
+    listed = {x["id"] for x in client.get("/api/auth/staff-requests", headers=h).json()}
+    assert other.json()["id"] not in listed          # different hospital
+    assert new_admin.json()["id"] not in listed      # admins need a super admin
+    assert client.post(f"/api/auth/staff-requests/{other.json()['id']}/approve", headers=h).status_code == 404
+    assert client.post(f"/api/auth/staff-requests/{new_admin.json()['id']}/approve", headers=h).status_code == 404
+
+
+def test_admin_requests_need_super_admin_then_new_admin_can_approve(client):
+    r, p = _staff_signup(client, 14, role="hospital_admin", hospital_id=1)
+    sup = _super_headers(client)
+    assert client.post(f"/api/auth/staff-requests/{r.json()['id']}/approve", headers=sup).status_code == 200
+    tok = _login(client, p["email"], p["password"]).json()["access_token"]
+    new_admin = {"Authorization": f"Bearer {tok}"}
+    s, _ = _staff_signup(client, 15, role="hospital_staff", hospital_id=1)
+    assert client.post(f"/api/auth/staff-requests/{s.json()['id']}/approve", headers=new_admin).status_code == 200
+
+
+def test_pending_admin_cannot_approve_anything(client):
+    r, p = _staff_signup(client, 16, role="hospital_admin", hospital_id=1)
+    assert _login(client, p["email"], p["password"]).status_code == 403   # no token => no approval power

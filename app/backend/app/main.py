@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from app.core.config import settings
-from app.core.database import engine, Base, SessionLocal
+from app.core.database import engine, Base, SessionLocal, migrate_schema
 from app.routers import auth_router, hospitals_router, bookings_router, admin_router, ws_router
 from app.services.booking_service import release_expired_bed_holds
 from app.seed.seed_data import seed_database
@@ -30,6 +30,7 @@ def auto_release_job():
 async def lifespan(app: FastAPI):
     # Startup: Ensure database tables are created & initial seed data exists
     Base.metadata.create_all(bind=engine)
+    migrate_schema()
     seed_database()
 
     # Start hold auto-release job every 20 seconds

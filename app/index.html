@@ -67,12 +67,15 @@
           <div class="flex items-center gap-1.5">
             <h4 class="font-extrabold text-xs text-white">MediBud App</h4>
             <span class="bg-emerald-500/20 text-emerald-400 text-[9px] font-bold px-1.5 py-0.2 rounded border border-emerald-500/30">Official</span>
-          </div>
+  
+        </div>
           <p class="text-[11px] text-slate-300">Fast 1-tap emergency booking on phone</p>
           <div class="flex items-center gap-1 text-[10px] text-amber-400">
             <span>★★★★★ 4.9</span>
             <span class="text-slate-400">• Free Download</span>
-          </div>
+  
+        </div>
+
         </div>
       </div>
 
@@ -103,6 +106,7 @@
             </span>
           </h1>
           <p class="text-[10px] sm:text-[11px] text-cyan-200">Emergency & Availability Network</p>
+
         </div>
       </div>
 
@@ -114,15 +118,17 @@
         </button>
 
         <div class="hidden sm:flex bg-cyan-950/60 p-1 rounded-xl items-center text-xs font-semibold">
+          <button id="auth-btn" onclick="handleAuthClick()" class="px-3 py-1.5 rounded-lg bg-cyan-700 text-white font-semibold hover:bg-cyan-600 transition-all">Login / Sign‑up</button>
           <button id="tab-patient" onclick="switchTab('patient')" class="px-3 py-1.5 rounded-lg bg-white text-cyan-900 shadow transition-all">
             <i class="fa-solid fa-user-injured mr-1"></i> Patient
           </button>
           <button id="tab-admin" onclick="switchTab('admin')" class="px-3 py-1.5 rounded-lg text-cyan-200 hover:text-white transition-all">
             <i class="fa-solid fa-hospital-user mr-1"></i> Staff Panel
           </button>
+
         </div>
 
-        <button onclick="triggerEmergencyMode()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shadow-lg emergency-pulse">
+        <button id="header-sos-btn" onclick="openEmergencyPage()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shadow-lg emergency-pulse">
           <i class="fa-solid fa-truck-medical text-sm"></i>
           <span>EMERGENCY SOS</span>
         </button>
@@ -169,14 +175,18 @@
                 <option value="26.5085,80.2440">📍 Kalyanpur (IIT Kanpur area)</option>
                 <option value="26.4320,80.3340">📍 Kidwai Nagar (South)</option>
               </select>
-            </div>
-          </div>
+    
+        </div>
+  
+        </div>
 
           <div class="flex items-center gap-2 w-full sm:w-auto">
             <button onclick="useCurrentGps()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1 border border-slate-300" title="Detect GPS">
               <i class="fa-solid fa-crosshairs"></i> <span class="hidden md:inline">GPS</span>
             </button>
-          </div>
+  
+        </div>
+
         </div>
 
         <!-- Normal Mode Sub-tabs: 1. Explore Hospitals vs 2. Guided Requirement/Checkup Booking -->
@@ -190,6 +200,7 @@
             <span>Book by Checkup / Requirement</span>
             <span class="bg-emerald-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full hidden sm:inline">NEW</span>
           </button>
+
         </div>
       </div>
 
@@ -204,8 +215,10 @@
           <div class="flex items-center gap-2 text-red-700 font-extrabold text-sm sm:text-base">
             <i class="fa-solid fa-triangle-exclamation text-xl animate-bounce"></i>
             <span>NEAREST EMERGENCY HOSPITALS WITH FREE BEDS</span>
-          </div>
+  
+        </div>
           <button onclick="closeEmergencyMode()" class="text-slate-400 hover:text-slate-700 text-sm font-bold px-2 py-1">✕</button>
+
         </div>
 
         <p class="text-xs text-red-800">
@@ -223,6 +236,7 @@
         <div class="flex items-center justify-between gap-2">
           <input type="text" id="search-input" oninput="filterHospitals()" placeholder="Filter by hospital name, locality, or facility..." class="text-xs bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 w-full sm:max-w-md focus:outline-none focus:border-cyan-600 shadow-sm" />
           <span id="hospital-count-label" class="text-xs font-bold text-slate-500 shrink-0">Loading...</span>
+
         </div>
 
         <div class="grid lg:grid-cols-12 gap-4">
@@ -231,14 +245,18 @@
             <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
               <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Live Proximity Radar</span>
               <span class="text-[11px] text-cyan-700 font-medium"><i class="fa-solid fa-map-pin mr-1"></i>Sorted by distance</span>
-            </div>
+    
+        </div>
             <div id="map" class="h-64 sm:h-80 w-full rounded-xl z-0"></div>
-          </div>
+  
+        </div>
 
           <!-- Hospital Cards List -->
           <div class="lg:col-span-7 space-y-3">
             <div id="hospitals-list" class="space-y-3"></div>
-          </div>
+  
+        </div>
+
         </div>
       </div>
 
@@ -255,10 +273,12 @@
               <span>Book by Service / Health Checkup</span>
             </h2>
             <p class="text-xs text-slate-500">Select what you need. If a doctor is needed, you choose a specialist; otherwise, book the facility directly without doctor consultation.</p>
-          </div>
+  
+        </div>
           <button onclick="resetGuidedBooking()" class="text-xs font-semibold text-cyan-700 hover:underline">
             ⟳ Reset Selection
           </button>
+
         </div>
 
         <!-- Step Indicator -->
@@ -267,12 +287,14 @@
           <div id="step-ind-2" class="py-1.5 px-2 rounded-lg bg-slate-100 text-slate-400">2. Specific Test</div>
           <div id="step-ind-3" class="py-1.5 px-2 rounded-lg bg-slate-100 text-slate-400">3. Hospital</div>
           <div id="step-ind-4" class="py-1.5 px-2 rounded-lg bg-slate-100 text-slate-400">4. Confirm</div>
+
         </div>
 
         <!-- STEP 1: CATEGORY SELECTION -->
         <div id="guided-step-1" class="space-y-3">
           <h3 class="text-xs font-black uppercase tracking-wider text-slate-500">Step 1: What kind of checkup or facility do you need?</h3>
           <div id="requirement-categories-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+
         </div>
 
         <!-- STEP 2: SPECIFIC SERVICE SELECTION -->
@@ -280,8 +302,10 @@
           <div class="flex items-center justify-between">
             <h3 class="text-xs font-black uppercase tracking-wider text-slate-500">Step 2: Choose your specific checkup or test</h3>
             <button onclick="goToGuidedStep(1)" class="text-xs text-cyan-700 font-bold hover:underline">← Back to Categories</button>
-          </div>
+  
+        </div>
           <div id="specific-services-grid" class="space-y-2"></div>
+
         </div>
 
         <!-- STEP 3: HOSPITAL SELECTION -->
@@ -289,8 +313,10 @@
           <div class="flex items-center justify-between">
             <h3 class="text-xs font-black uppercase tracking-wider text-slate-500">Step 3: Select a verified hospital offering this facility</h3>
             <button onclick="goToGuidedStep(2)" class="text-xs text-cyan-700 font-bold hover:underline">← Back to Services</button>
-          </div>
+  
+        </div>
           <div id="service-hospitals-grid" class="space-y-2.5"></div>
+
         </div>
 
         <!-- STEP 4: DOCTOR (IF NEEDED) OR TIME WINDOW + FINAL CONFIRMATION -->
@@ -298,7 +324,8 @@
           <div class="flex items-center justify-between">
             <h3 class="text-xs font-black uppercase tracking-wider text-slate-500">Step 4: Final Booking Details</h3>
             <button onclick="goToGuidedStep(3)" class="text-xs text-cyan-700 font-bold hover:underline">← Back to Hospitals</button>
-          </div>
+  
+        </div>
 
           <!-- Summary Pill -->
           <div id="guided-summary-card" class="bg-cyan-50 border border-cyan-200 rounded-xl p-3 text-xs text-cyan-950 flex flex-wrap items-center justify-between gap-2"></div>
@@ -308,45 +335,56 @@
             <div class="text-xs font-bold text-slate-800 flex items-center justify-between">
               <span>Doctor Consultation Required: Select Available Specialist</span>
               <span class="text-[11px] text-cyan-700">On-Duty & Free Today</span>
-            </div>
+    
+        </div>
             <div id="guided-doctors-list" class="space-y-2"></div>
-          </div>
+  
+        </div>
 
           <!-- Facility Direct Timing Section (If requires_doctor === false) -->
           <div id="guided-facility-timing" class="hidden space-y-2 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
             <div class="text-xs font-bold text-emerald-900 flex items-center gap-1.5">
               <i class="fa-solid fa-circle-check text-emerald-600"></i>
               <span>Direct Facility Booking (No Doctor Consultation Needed)</span>
-            </div>
+    
+        </div>
             <p class="text-[11px] text-emerald-800">Your lab or scan appointment will be directly scheduled in the facility department. Choose your arrival window:</p>
             <div id="guided-time-windows" class="grid grid-cols-3 gap-2 text-xs">
               <button type="button" onclick="selectTimeWindow('Morning: 08:30 - 11:30', this)" class="window-btn p-2 rounded-lg border border-emerald-300 bg-white font-bold text-emerald-900 hover:bg-emerald-100">🌅 Morning<br><span class="text-[10px] font-normal">08:30 - 11:30</span></button>
               <button type="button" onclick="selectTimeWindow('Afternoon: 12:30 - 15:30', this)" class="window-btn p-2 rounded-lg border border-emerald-300 bg-white font-bold text-emerald-900 hover:bg-emerald-100">☀️ Afternoon<br><span class="text-[10px] font-normal">12:30 - 15:30</span></button>
               <button type="button" onclick="selectTimeWindow('Evening: 16:30 - 19:30', this)" class="window-btn p-2 rounded-lg border border-emerald-300 bg-white font-bold text-emerald-900 hover:bg-emerald-100">🌆 Evening<br><span class="text-[10px] font-normal">16:30 - 19:30</span></button>
-            </div>
-          </div>
+    
+        </div>
+  
+        </div>
 
           <!-- Patient Input & Submit -->
           <div class="grid sm:grid-cols-2 gap-3 text-xs">
             <div>
               <label class="block font-bold text-slate-700 mb-1">Patient Full Name</label>
               <input type="text" id="guided-patient-name" placeholder="e.g. Aman Gupta" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-cyan-600" />
-            </div>
+    
+        </div>
             <div>
               <label class="block font-bold text-slate-700 mb-1">Patient Contact Phone</label>
               <input type="tel" id="guided-patient-phone" placeholder="e.g. +91 98765 43210" value="+919876543210" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-cyan-600" />
-            </div>
+    
+        </div>
             <div class="sm:col-span-2">
               <label class="block font-bold text-slate-700 mb-1">Medical Notes or Symptoms (Optional)</label>
               <input type="text" id="guided-patient-notes" placeholder="e.g. Routine checkup, fasting sugar test" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-cyan-600" />
-            </div>
-          </div>
+    
+        </div>
+  
+        </div>
 
           <div class="pt-2">
             <button onclick="submitGuidedCheckupBooking()" id="guided-submit-btn" class="w-full py-3 bg-cyan-700 hover:bg-cyan-800 text-white font-extrabold text-sm rounded-xl shadow-md flex items-center justify-center gap-2">
               <i class="fa-solid fa-check-circle"></i> Confirm Checkup Booking
             </button>
-          </div>
+  
+        </div>
+
         </div>
       </div>
     </div>
@@ -356,6 +394,16 @@
     <!-- HOSPITAL ADMIN & STAFF VIEW -->
     <!-- ========================================== -->
     <div id="admin-view" class="hidden space-y-4">
+      <!-- Super admin only: staff sign-up approvals -->
+      <div id="approvals-card" class="hidden bg-white rounded-2xl border-2 border-amber-300 shadow-sm p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="font-black text-slate-900 flex items-center gap-2"><i class="fa-solid fa-user-check text-amber-600"></i> Pending Approvals
+            <span id="approvals-count" class="text-[11px] bg-amber-500 text-white px-2 py-0.5 rounded-full">0</span></h3>
+          <button onclick="loadApprovals()" class="text-xs font-bold text-cyan-800 border border-cyan-300 rounded-lg px-2 py-1"><i class="fa-solid fa-rotate"></i> Refresh</button>
+        </div>
+        <div id="approvals-list" class="space-y-2"></div>
+      </div>
+
       <div class="bg-gradient-to-r from-cyan-900 to-slate-900 text-white p-4 rounded-2xl shadow-md flex flex-wrap gap-4 items-center justify-between">
         <div>
           <span class="text-xs font-bold uppercase tracking-wider text-cyan-300">Staff Operational Portal</span>
@@ -363,12 +411,14 @@
             <span>⚡ Zero-Friction 1-Tap Telemetry Dashboard</span>
           </h2>
           <p class="text-xs text-cyan-200 mt-0.5">Instant updates without forms. One click on `+` or `−` updates patient views in real time.</p>
+
         </div>
 
         <div class="flex items-center gap-2">
           <label class="text-xs text-cyan-200 font-semibold">Managing Hospital:</label>
           <select id="admin-hospital-select" onchange="onAdminHospitalChange(this.value)" class="bg-cyan-950 text-white border border-cyan-700 rounded-lg px-3 py-1.5 text-xs font-bold focus:outline-none">
           </select>
+
         </div>
       </div>
 
@@ -381,8 +431,10 @@
               <i class="fa-solid fa-bed text-cyan-700"></i> Live Bed Inventory (1-Tap +/-)
             </h3>
             <span id="admin-last-updated" class="text-[11px] text-emerald-600 font-semibold">Updated just now</span>
-          </div>
+  
+        </div>
           <div id="admin-bed-controls" class="space-y-3"></div>
+
         </div>
 
         <!-- 1-Tap Doctor Duty Toggles -->
@@ -392,8 +444,10 @@
               <i class="fa-solid fa-user-doctor text-cyan-700"></i> Doctor On-Duty Roster
             </h3>
             <span class="text-[11px] text-slate-400">Tap status to cycle</span>
-          </div>
+  
+        </div>
           <div id="admin-doctor-controls" class="space-y-3"></div>
+
         </div>
       </div>
 
@@ -404,6 +458,7 @@
             <i class="fa-solid fa-clipboard-check text-cyan-700"></i> Patient Hold Queue & Arrivals
           </h3>
           <span class="text-xs text-slate-500 font-medium">Verify patient code on arrival</span>
+
         </div>
         <div id="admin-queue-list" class="divide-y divide-slate-100"></div>
       </div>
@@ -424,7 +479,7 @@
       <span>Checkups</span>
     </button>
 
-    <button onclick="triggerEmergencyMode()" class="flex flex-col items-center -top-4 relative">
+    <button id="mob-sos-btn" onclick="openEmergencyPage()" class="flex flex-col items-center -top-4 relative">
       <div class="bg-red-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg border-4 border-white emergency-pulse">
         <i class="fa-solid fa-truck-medical text-lg"></i>
       </div>
@@ -440,7 +495,129 @@
       <i class="fa-solid fa-id-card-clip text-base mb-0.5"></i>
       <span>Staff</span>
     </button>
+
+    <button onclick="handleAuthClick()" id="mob-auth-btn" class="flex flex-col items-center py-1 px-3 text-slate-500 font-semibold text-[10px]">
+      <i class="fa-solid fa-circle-user text-base mb-0.5"></i>
+      <span id="mob-auth-label">Login</span>
+    </button>
   </nav>
+
+  <!-- ======================================================== -->
+  <!-- 🔐 LOGIN / SIGN-UP MODAL                                  -->
+  <!-- ======================================================== -->
+  <!-- 🚪 GATE (shown when logged out): Login / Sign up / Emergency -->
+  <!-- ======================================================== -->
+  <div id="gate" class="fixed inset-0 z-40 bg-gradient-to-b from-cyan-900 to-slate-950 text-white items-center justify-center p-5 overflow-y-auto hidden">
+    <div class="w-full max-w-sm space-y-6 text-center">
+      <div>
+        <img src="/static/icon.svg" class="w-16 h-16 mx-auto rounded-2xl shadow-lg" alt="MediBud" />
+        <h1 class="text-3xl font-black mt-3">MediBud</h1>
+        <p class="text-cyan-200 text-sm">Emergency &amp; Availability Network</p>
+      </div>
+      <button onclick="openEmergencyPage()" class="w-full bg-red-600 hover:bg-red-700 text-white font-black py-4 rounded-2xl text-lg shadow-xl emergency-pulse flex items-center justify-center gap-3">
+        <i class="fa-solid fa-truck-medical"></i> EMERGENCY
+      </button>
+      <p class="text-[11px] text-cyan-200 -mt-3">No login needed &mdash; get the nearest hospital with a free bed instantly</p>
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="openAuthModal('login')" class="bg-white text-cyan-900 font-bold py-3 rounded-xl text-sm hover:bg-cyan-50">Login</button>
+        <button onclick="openAuthModal('register')" class="bg-cyan-700 text-white font-bold py-3 rounded-xl text-sm hover:bg-cyan-600 border border-cyan-500">Sign up</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 🚨 EMERGENCY PAGE (no login): auto-locates, asks type, shows nearest hospitals -->
+  <!-- ======================================================== -->
+  <div id="emergency-page" class="fixed inset-0 z-[45] bg-red-50 overflow-y-auto hidden">
+    <div class="bg-red-700 text-white px-4 py-3 flex items-center justify-between sticky top-0 shadow-lg">
+      <div class="flex items-center gap-2 font-black text-lg"><i class="fa-solid fa-truck-medical"></i> EMERGENCY</div>
+      <button onclick="closeEmergencyPage()" class="bg-red-900/60 hover:bg-red-900 px-3 py-1.5 rounded-lg text-xs font-bold"><i class="fa-solid fa-xmark mr-1"></i>Close</button>
+    </div>
+    <div class="max-w-2xl mx-auto p-4 space-y-4">
+      <div class="grid grid-cols-2 gap-3">
+        <a href="tel:108" class="text-center bg-red-600 hover:bg-red-700 text-white font-black py-3 rounded-2xl shadow">📞 Call 108<span class="block text-[10px] font-semibold opacity-90">Ambulance</span></a>
+        <a href="tel:112" class="text-center bg-slate-900 hover:bg-slate-800 text-white font-black py-3 rounded-2xl shadow">📞 Call 112<span class="block text-[10px] font-semibold opacity-90">Emergency helpline</span></a>
+      </div>
+
+      <div class="bg-white rounded-2xl p-3 border border-red-200 space-y-2">
+        <div class="flex items-center justify-between gap-2">
+          <span id="ep-loc-label" class="text-xs font-semibold text-slate-600"><i class="fa-solid fa-location-dot text-red-600"></i> Finding your location&hellip;</span>
+          <button onclick="epUseGps()" class="text-xs font-bold text-cyan-800 border border-cyan-300 rounded-lg px-2 py-1"><i class="fa-solid fa-crosshairs"></i> GPS</button>
+        </div>
+        <select id="ep-loc-select" onchange="epLocChange(this.value)" class="w-full text-xs border border-slate-300 rounded-lg px-2 py-1.5 bg-slate-50"></select>
+      </div>
+
+      <div>
+        <p class="text-sm font-extrabold text-red-900 mb-2">What is the emergency?</p>
+        <div id="ep-chips" class="flex flex-wrap gap-2"></div>
+      </div>
+
+      <div id="ep-results" class="space-y-3"></div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <div id="auth-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white max-w-sm w-full rounded-3xl shadow-2xl p-6 border border-slate-100 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 id="auth-title" class="font-black text-lg text-slate-900">Login</h3>
+        <button onclick="closeAuthModal()" class="text-slate-400 hover:text-slate-700 text-xl leading-none" aria-label="Close">&times;</button>
+      </div>
+
+      <div class="flex bg-slate-100 rounded-xl p-1 text-xs font-semibold">
+        <button id="auth-tab-login" onclick="setAuthMode('login')" class="flex-1 py-1.5 rounded-lg bg-white shadow text-cyan-900">Login</button>
+        <button id="auth-tab-register" onclick="setAuthMode('register')" class="flex-1 py-1.5 rounded-lg text-slate-500">Sign up</button>
+      </div>
+
+      <!-- Step 1 (sign-up only): who are you? -->
+      <div id="auth-role-pick" class="space-y-2 hidden">
+        <p class="text-xs font-semibold text-slate-500">I am signing up as</p>
+        <button onclick="chooseRegRole('patient')" class="w-full flex items-center gap-3 text-left border border-slate-200 hover:border-cyan-600 hover:bg-cyan-50 rounded-2xl px-4 py-3 transition-all">
+          <span class="w-10 h-10 rounded-full bg-cyan-100 text-cyan-800 flex items-center justify-center text-lg"><i class="fa-solid fa-user"></i></span>
+          <span><span class="block font-bold text-sm text-slate-900">User / Patient</span><span class="block text-[11px] text-slate-500">Find hospitals, hold beds, book doctors</span></span>
+        </button>
+        <button onclick="chooseRegRole('staff')" class="w-full flex items-center gap-3 text-left border border-slate-200 hover:border-cyan-600 hover:bg-cyan-50 rounded-2xl px-4 py-3 transition-all">
+          <span class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center text-lg"><i class="fa-solid fa-hospital"></i></span>
+          <span><span class="block font-bold text-sm text-slate-900">Hospital Staff</span><span class="block text-[11px] text-slate-500">Manage beds, doctors and incoming patients</span></span>
+        </button>
+      </div>
+
+      <!-- Step 2 (sign-up only): details for the chosen type -->
+      <div id="auth-register-fields" class="space-y-2 hidden">
+        <div class="flex items-center justify-between text-xs">
+          <span id="auth-role-badge" class="font-bold text-cyan-800 bg-cyan-50 px-2.5 py-1 rounded-full"></span>
+          <button onclick="setAuthMode('register')" class="text-slate-500 hover:text-slate-800 font-semibold"><i class="fa-solid fa-arrow-left"></i> Change</button>
+        </div>
+        <input id="auth-name" type="text" placeholder="Full name" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
+        <input id="auth-phone" type="tel" placeholder="Phone (10-15 digits)" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
+        <div id="auth-staff-fields" class="space-y-2 hidden">
+          <select id="auth-hospital" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm bg-white"><option value="">Select your hospital</option></select>
+          <select id="auth-staff-role" onchange="updateStaffHint()" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm bg-white">
+            <option value="hospital_staff">Hospital Staff</option>
+            <option value="doctor">Doctor</option>
+            <option value="hospital_admin">Hospital Admin</option>
+          </select>
+          <p id="auth-staff-hint" class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5"></p>
+        </div>
+      </div>
+      <div id="auth-creds" class="space-y-2">
+        <input id="auth-username" type="text" placeholder="Email (or phone)" autocomplete="username" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
+        <input id="auth-password" type="password" placeholder="Password (min 6 chars)" autocomplete="current-password" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" onkeydown="if(event.key==='Enter') submitAuth()" />
+      </div>
+
+      <p id="auth-notice" class="hidden text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-300 rounded-lg px-3 py-2"></p>
+      <p id="auth-error" class="text-xs text-red-600 font-semibold hidden"></p>
+
+      <button id="auth-submit" onclick="submitAuth()" class="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-bold py-2.5 rounded-xl text-sm transition-all">Login</button>
+
+      <div id="auth-demo" class="text-[11px] text-slate-500 border-t border-slate-100 pt-3">
+        Demo accounts:
+        <button onclick="fillDemo('patient@medibud.com','password123')" class="underline text-cyan-700 font-semibold">Patient</button> ·
+        <button onclick="fillDemo('admin@lifeline.com','admin123')" class="underline text-cyan-700 font-semibold">Hospital admin</button> ·
+        <button onclick="fillDemo('superadmin@medibud.com','superadmin123')" class="underline text-cyan-700 font-semibold">Super admin</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ======================================================== -->
   <!-- 🚨 EMERGENCY READINESS & BED HOLD MODAL                   -->
@@ -457,6 +634,7 @@
           </span>
           <h3 id="em-modal-hospital-name" class="font-black text-slate-900 text-base sm:text-lg mt-1"></h3>
           <p id="em-modal-eta" class="text-xs text-red-700 font-bold"></p>
+
         </div>
         <button onclick="closeEmergencyTriageModal()" class="text-slate-400 hover:text-slate-600 text-base font-bold p-1">✕</button>
       </div>
@@ -476,6 +654,7 @@
             <i class="fa-solid fa-user-doctor text-emerald-600"></i> Doctors on Duty for Next 1 Hour:
           </label>
           <span class="text-[10px] text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded-full">Guaranteed Free on Arrival</span>
+
         </div>
         <p class="text-[11px] text-slate-500">The doctors below are currently free and confirmed on duty so you won't encounter busy surgeons upon reaching the facility:</p>
         <div id="em-modal-doctors" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
@@ -492,14 +671,17 @@
         <div>
           <label class="block font-bold text-slate-600 mb-1">Patient Full Name</label>
           <input type="text" id="em-patient-name" placeholder="e.g. Rahul Sharma" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-red-600" />
+
         </div>
         <div>
           <label class="block font-bold text-slate-600 mb-1">Contact Phone</label>
           <input type="tel" id="em-patient-phone" placeholder="e.g. +91 98765 43210" value="+919876543210" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-red-600" />
+
         </div>
         <div class="sm:col-span-2">
           <label class="block font-bold text-slate-600 mb-1">Emergency Condition / Symptoms</label>
           <input type="text" id="em-emergency-notes" placeholder="e.g. Severe chest pain, fracture trauma, acute breathing distress" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-red-600" />
+
         </div>
       </div>
 
@@ -530,12 +712,15 @@
       <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 text-left space-y-2 text-xs">
         <div class="flex items-center gap-2 font-bold text-slate-800">
           <i class="fa-solid fa-bolt text-amber-500"></i> Instant SOS Access from Home Screen
+
         </div>
         <div class="flex items-center gap-2 font-bold text-slate-800">
           <i class="fa-solid fa-signal text-emerald-600"></i> Works even on slow 2G/3G connections
+
         </div>
         <div class="flex items-center gap-2 font-bold text-slate-800">
           <i class="fa-solid fa-bell text-cyan-600"></i> Live 30-min bed hold alerts
+
         </div>
       </div>
 
@@ -546,6 +731,7 @@
 
         <div id="ios-instruction" class="hidden text-[11px] text-slate-500 bg-amber-50 border border-amber-200 p-2 rounded-xl text-center">
           On iOS Safari: Tap <b>Share</b> <i class="fa-solid fa-arrow-up-from-bracket"></i> then select <b>"Add to Home Screen"</b>.
+
         </div>
 
         <button onclick="closeDownloadModal()" class="w-full py-2 text-xs text-slate-400 hover:text-slate-600 font-semibold">
@@ -781,6 +967,183 @@
       }
     ];
 
+
+    // ========================================================
+    // 👤 ROLE-BASED VIEW: patients see patient UI only, staff see staff UI only
+    // ========================================================
+    function jwtPayload(tok) {
+      try { return JSON.parse(atob(tok.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); } catch (e) { return {}; }
+    }
+    function isStaffUser() { return !!(authState && authState.role && authState.role !== 'patient'); }
+    function staffHospitalId() {
+      if (!isStaffUser() || authState.role === 'super_admin') return null;
+      const id = authState.hospital_id || jwtPayload(authState.access_token).hospital_id;
+      return id ? Number(id) : null;
+    }
+    function setHidden(id, hide) { const el = document.getElementById(id); if (el) el.classList.toggle('hidden', hide); }
+
+    function applyRole() {
+      const loggedIn = !!authState;
+      const staff = isStaffUser();
+      const gate = document.getElementById('gate');
+      gate.classList.toggle('hidden', loggedIn);
+      gate.classList.toggle('flex', !loggedIn);
+
+      // 1) choose the view first (switchTab rewrites tab classes)...
+      if (staff) {
+        const hid = staffHospitalId();
+        if (hid) currentAdminHospitalId = hid;
+        if (typeof hospitalsData !== 'undefined' && hospitalsData.length) populateAdminHospitalSelect(hospitalsData);
+        switchTab('admin');
+        loadApprovals();
+      } else if (loggedIn) {
+        switchTab('patient');
+      }
+
+      // 2) ...then hide whatever the role must not see
+      setHidden('tab-patient', staff);                       // patient-only
+      ['mob-nav-hospitals', 'mob-nav-services', 'mob-nav-holds'].forEach(id => setHidden(id, staff));
+      setHidden('tab-admin', !staff);                        // staff-only
+      setHidden('mob-nav-admin', !staff);
+      const sim = document.getElementById('sim-checkbox');
+      if (sim && sim.parentElement) sim.parentElement.classList.toggle('hidden', !staff);
+      setHidden('header-sos-btn', staff);                    // emergency is for patients / guests
+      setHidden('mob-sos-btn', staff);
+    }
+
+    // ========================================================
+    // 🚨 EMERGENCY PAGE (works without login)
+    // ========================================================
+    const EP_TYPES = {
+      any:       { label: '❓ Not sure',          beds: ['general', 'icu'],        name: 'emergency' },
+      accident:  { label: '🚑 Accident / Injury', beds: ['general', 'icu'],        name: 'emergency' },
+      heart:     { label: '❤️ Chest pain / Heart', beds: ['icu'],                  name: 'ICU' },
+      breathing: { label: '🫁 Breathing trouble', beds: ['oxygen', 'ventilator'],  name: 'oxygen / ventilator' },
+      stroke:    { label: '🧠 Stroke / Unconscious', beds: ['icu'],                name: 'ICU' },
+      other:     { label: '➕ Other',              beds: ['general', 'icu'],        name: 'emergency' }
+    };
+    let epType = 'any';
+
+    function openEmergencyPage() {
+      if ('vibrate' in navigator) navigator.vibrate([100, 50, 100]);
+      document.getElementById('emergency-page').classList.remove('hidden');
+      // location presets (copied from the main selector)
+      const src = document.getElementById('user-location-select');
+      const dst = document.getElementById('ep-loc-select');
+      if (src && dst) { dst.innerHTML = src.innerHTML; dst.value = src.value; }
+      epRenderChips();
+      epLocLabel('preset');
+      epSearch();            // show results immediately, no taps needed
+      epUseGps(true);        // then refine with real GPS if allowed
+    }
+    function closeEmergencyPage() { document.getElementById('emergency-page').classList.add('hidden'); }
+
+    function epLocLabel(kind) {
+      const el = document.getElementById('ep-loc-label');
+      el.innerHTML = kind === 'gps'
+        ? '<i class="fa-solid fa-location-crosshairs text-red-600"></i> Using your GPS location'
+        : '<i class="fa-solid fa-location-dot text-red-600"></i> Using selected area (tap GPS for exact)';
+    }
+    function epUseGps(silent) {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(pos => {
+        userLat = pos.coords.latitude; userLon = pos.coords.longitude;
+        epLocLabel('gps'); epSearch();
+      }, () => { if (!silent) alert('GPS unavailable. Please pick your area from the list.'); },
+      { timeout: 5000, maximumAge: 60000 });
+    }
+    function epLocChange(val) {
+      const [la, lo] = String(val).split(',').map(Number);
+      if (isNaN(la) || isNaN(lo)) return;
+      userLat = la; userLon = lo; epLocLabel('preset'); epSearch();
+    }
+    function epRenderChips() {
+      document.getElementById('ep-chips').innerHTML = Object.entries(EP_TYPES).map(([k, t]) => `
+        <button onclick="epPick('${k}')" class="px-3 py-2 rounded-xl text-xs font-extrabold border-2 ${k === epType ? 'bg-red-600 text-white border-red-700' : 'bg-white text-red-800 border-red-300 hover:bg-red-100'}">${t.label}</button>`).join('');
+    }
+    function epPick(k) { epType = k; epRenderChips(); epSearch(); }
+
+    async function epSearch() {
+      const box = document.getElementById('ep-results');
+      box.innerHTML = '<div class="text-sm text-red-800 font-semibold">Finding the nearest hospitals with a free bed&hellip;</div>';
+      const t = EP_TYPES[epType];
+      try {
+        const res = await fetch(`${API_BASE}/hospitals?lat=${userLat}&lon=${userLon}`);
+        if (!res.ok) throw new Error('bad response');
+        const list = await res.json();
+        const withFree = list.map(h => ({ h, free: t.beds.reduce((n, b) => n + ((h.beds && h.beds[b]) ? h.beds[b].free : 0), 0) }));
+        let hits = withFree.filter(x => x.free > 0).slice(0, 3);
+        let note = '';
+        if (!hits.length) {
+          hits = withFree.slice(0, 3);
+          note = `<div class="bg-amber-100 border border-amber-400 text-amber-900 text-xs font-bold rounded-xl p-3">No ${t.name} beds free nearby right now. Call 108 and phone these hospitals to confirm.</div>`;
+        }
+        box.innerHTML = note + hits.map(({ h, free }) => `
+          <div class="bg-white rounded-2xl border-2 border-red-300 shadow p-3.5 space-y-2.5">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <b class="text-slate-900 text-sm font-extrabold">${h.name}</b>
+                <p class="text-[11px] text-slate-500">${h.distance_km != null ? h.distance_km.toFixed(1) + ' km' : ''} · ~${h.estimated_time_min ?? '?'} min drive</p>
+              </div>
+              <span class="${free > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'} text-[10px] font-black px-2 py-0.5 rounded-full whitespace-nowrap">${free} FREE</span>
+            </div>
+            ${h.is_stale ? `<p class="text-[10px] font-bold text-amber-700">⚠ Bed data last updated ${h.last_updated_minutes_ago} min ago — call to confirm</p>` : ''}
+            <div class="flex gap-2">
+              <a href="tel:${h.emergency_phone}" class="flex-1 text-center py-2 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl">📞 CALL NOW</a>
+              <a target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${h.latitude},${h.longitude}" class="flex-1 text-center py-2 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl">🧭 NAVIGATE</a>
+            </div>
+            <button onclick="openEmergencyTriageModal(${h.id})" class="w-full py-2 bg-red-50 hover:bg-red-100 text-red-800 font-extrabold text-xs rounded-xl border border-red-300">⚡ Reserve a bed &amp; see on-duty doctors</button>
+          </div>`).join('');
+      } catch (e) {
+        box.innerHTML = '<div class="bg-white border-2 border-red-400 rounded-2xl p-4 text-sm font-bold text-red-800">Could not load hospitals. <a class="underline" href="tel:108">Call 108 now</a>.</div>';
+      }
+    }
+
+
+    // ========================================================
+    // ✅ STAFF APPROVALS (super admin only)
+    // ========================================================
+    function esc(t) { return String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+    const ROLE_LABELS = { hospital_admin: 'Hospital Admin', hospital_staff: 'Hospital Staff', doctor: 'Doctor', super_admin: 'Super Admin' };
+
+    async function loadApprovals() {
+      const card = document.getElementById('approvals-card');
+      const canReview = !!(authState && (authState.role === 'super_admin' || authState.role === 'hospital_admin'));
+      card.classList.toggle('hidden', !canReview);
+      if (!canReview) return;
+      const list = document.getElementById('approvals-list');
+      try {
+        const res = await fetch(`${API_BASE}/auth/staff-requests?status_filter=pending`);
+        if (!res.ok) throw new Error('failed');
+        const items = await res.json();
+        document.getElementById('approvals-count').innerText = items.length;
+        list.innerHTML = items.length ? items.map(u => `
+          <div class="flex flex-wrap items-center justify-between gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3">
+            <div class="min-w-0">
+              <b class="text-sm text-slate-900">${esc(u.full_name)}</b>
+              <span class="text-[10px] font-bold bg-white border border-amber-300 text-amber-800 px-1.5 py-0.5 rounded ml-1">${ROLE_LABELS[u.role] || u.role}</span>
+              <p class="text-[11px] text-slate-600">${esc(u.hospital_name || 'Unknown hospital')} · ${esc(u.email)} · ${esc(u.phone)}</p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="reviewStaff(${u.id}, 'approve')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-lg">Approve</button>
+              <button onclick="reviewStaff(${u.id}, 'reject')" class="px-3 py-1.5 bg-white hover:bg-red-50 text-red-700 border border-red-300 text-xs font-extrabold rounded-lg">Reject</button>
+            </div>
+          </div>`).join('') : '<p class="text-xs text-slate-500">No pending requests.</p>';
+      } catch (e) {
+        list.innerHTML = '<p class="text-xs text-red-700">Could not load requests.</p>';
+      }
+    }
+
+    async function reviewStaff(id, action) {
+      if (action === 'reject' && !confirm('Reject this staff request?')) return;
+      try {
+        const res = await fetch(`${API_BASE}/auth/staff-requests/${id}/${action}`, { method: 'POST' });
+        if (!res.ok) { const d = await res.json().catch(() => null); alert(authErrorText(d, 'Action failed.')); }
+      } catch (e) { alert('Network error. Please try again.'); }
+      loadApprovals();
+    }
+
     // --- Init ---
     window.addEventListener('DOMContentLoaded', () => {
       detectEnvironmentAndPWA();
@@ -792,6 +1155,7 @@
       renderGuidedCategories();
 
       setInterval(updateHoldCountdowns, 1000);
+      applyRole();
     });
 
     // --- PWA, Device & Install Detection ---
@@ -974,9 +1338,11 @@
             <span class="text-slate-500">${h.distance_km ? h.distance_km + ' km away' : ''}</span>
             <div class="mt-1 font-bold ${freeEmergency > 0 ? 'text-emerald-700' : 'text-red-600'}">
               ICU/General Free: ${freeEmergency}
-            </div>
+    
+        </div>
             <button onclick="openEmergencyTriageModal(${h.id})" class="inline-block mt-1 text-[11px] bg-red-600 text-white font-bold px-2 py-0.5 rounded">⚡ Emergency Triage</button>
-          </div>
+  
+        </div>
         `;
         m.bindPopup(popupContent);
         mapMarkers.push(m);
@@ -1061,7 +1427,8 @@
             <div class="px-2.5 py-1.5 rounded-xl border text-xs flex items-center justify-between gap-2 ${isZero ? 'bg-slate-50 text-slate-400 border-slate-200' : BED_INFO[bt].color}">
               <span class="font-bold">${BED_INFO[bt].label}</span>
               <span class="font-black ${isZero ? 'text-slate-400' : 'text-slate-900'}">${free}/${total}</span>
-            </div>
+    
+        </div>
           `;
         }).join('');
 
@@ -1072,20 +1439,25 @@
                 <div class="flex items-center gap-2">
                   <h3 class="font-extrabold text-slate-900 text-base">${h.name}</h3>
                   ${h.is_verified ? '<i class="fa-solid fa-circle-check text-cyan-600 text-xs" title="Verified Hospital"></i>' : ''}
-                </div>
+        
+        </div>
                 <p class="text-xs text-slate-500 mt-0.5"><i class="fa-solid fa-location-dot mr-1 text-slate-400"></i>${h.address}</p>
-              </div>
+      
+        </div>
 
               <div class="text-right shrink-0">
                 <span class="text-sm font-black text-slate-900">${h.distance_km ? h.distance_km.toFixed(1) + ' km' : 'Nearby'}</span>
                 <span class="text-[11px] text-slate-500 block">~${h.estimated_time_min || 5} mins drive</span>
-              </div>
-            </div>
+      
+        </div>
+    
+        </div>
 
             <!-- Live Bed Telemetry Breakdown -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
               ${bedChips}
-            </div>
+    
+        </div>
 
             <!-- Facilities snippet & Freshness status -->
             <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
@@ -1093,7 +1465,8 @@
                 ${freshnessTag}
                 <span class="text-[11px] text-slate-400 hidden sm:inline">•</span>
                 <span class="text-[11px] text-slate-500 hidden sm:inline">${(h.facilities || []).slice(0, 3).join(' · ')}</span>
-              </div>
+      
+        </div>
 
               <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
                 <a href="tel:${h.emergency_phone}" class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-2.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1 border border-slate-300">
@@ -1105,9 +1478,12 @@
                 <button onclick="openEmergencyTriageModal(${h.id})" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-xl font-bold text-xs shadow-sm flex items-center gap-1">
                   <i class="fa-solid fa-shield-halved"></i> Emergency Triage
                 </button>
-              </div>
-            </div>
-          </div>
+      
+        </div>
+    
+        </div>
+  
+        </div>
         `;
       }).join('');
     }
@@ -1139,16 +1515,19 @@
               <div>
                 <b class="text-slate-900 text-sm font-extrabold">${h.name}</b>
                 <p class="text-[11px] text-slate-500">${h.distance_km ? h.distance_km.toFixed(1) + ' km away' : ''} (~${h.estimated_time_min} mins drive)</p>
-              </div>
+      
+        </div>
               <span class="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full">
                 ${h.emergency_free_beds} FREE BEDS
               </span>
-            </div>
+    
+        </div>
 
             <!-- Facilities snippet -->
             <div class="text-[10px] text-slate-600 flex flex-wrap gap-1">
               ${(h.facilities || []).slice(0, 4).map(f => `<span class="bg-slate-100 px-1.5 py-0.5 rounded font-medium">${f}</span>`).join('')}
-            </div>
+    
+        </div>
 
             <div class="flex items-center gap-1.5 pt-1">
               <a href="tel:${h.emergency_phone}" class="flex-1 text-center py-1.5 bg-red-600 hover:bg-red-700 text-white font-extrabold text-[11px] rounded-xl shadow">
@@ -1157,12 +1536,14 @@
               <a target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${h.latitude},${h.longitude}" class="flex-1 text-center py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[11px] rounded-xl shadow">
                 🧭 NAVIGATE
               </a>
-            </div>
+    
+        </div>
 
             <button onclick="openEmergencyTriageModal(${h.id})" class="w-full py-2 text-center bg-red-50 hover:bg-red-100 text-red-800 font-extrabold text-xs rounded-xl border border-red-300 flex items-center justify-center gap-1.5">
               <span>⚡ View Facilities & 1-Hr On-Duty Doctors</span>
             </button>
-          </div>
+  
+        </div>
         `).join('');
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1215,17 +1596,20 @@
                   <div class="flex items-center gap-1.5">
                     <b class="text-slate-900">${d.name}</b>
                     <span class="text-slate-500">(${d.specialty})</span>
-                  </div>
+          
+        </div>
                   <p class="text-[11px] ${isAvail ? 'text-emerald-700 font-semibold' : 'text-slate-400'}">
                     ${isAvail 
                       ? `🟢 Free on Duty • Confirmed ready upon arrival in ~${hospital.estimated_time_min || 5}m` 
                       : (isInSurgery ? '🟡 Currently in Emergency Surgery' : '⚪ Off Duty')}
                   </p>
-                </div>
+        
+        </div>
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${isAvail ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}">
                   ${isAvail ? 'Available Now' : d.status.replace('_', ' ')}
                 </span>
-              </div>
+      
+        </div>
             `;
           }).join('');
         }
@@ -1337,13 +1721,17 @@
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl ${cat.color} flex items-center justify-center font-bold text-lg border">
               <i class="fa-solid ${cat.icon}"></i>
-            </div>
+    
+        </div>
             <div>
               <h4 class="font-extrabold text-sm text-slate-900 leading-tight">${cat.title}</h4>
               <span class="text-[10px] text-cyan-700 font-bold">${cat.services.length} options available</span>
-            </div>
-          </div>
+    
+        </div>
+  
+        </div>
           <p class="text-xs text-slate-500 leading-snug">${cat.description}</p>
+
         </div>
       `).join('');
     }
@@ -1365,16 +1753,20 @@
               <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${s.requires_doctor ? 'bg-amber-100 text-amber-900 border border-amber-200' : 'bg-emerald-100 text-emerald-900 border border-emerald-200'}">
                 ${s.requires_doctor ? '👨‍⚕️ Specialist Consultation Included' : '⚡ Direct Lab/Scan (No Doctor Consultation Needed)'}
               </span>
-            </div>
+    
+        </div>
             <p class="text-xs text-slate-500 mt-0.5">${s.desc}</p>
-          </div>
+  
+        </div>
 
           <div class="flex items-center gap-3">
             <span class="text-sm font-black text-cyan-800">${s.price}</span>
             <button class="bg-cyan-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-sm">
               Select →
             </button>
-          </div>
+  
+        </div>
+
         </div>
       `).join('');
     }
@@ -1406,12 +1798,15 @@
             <div class="flex items-center gap-2">
               <h4 class="font-extrabold text-sm text-slate-900">${h.name}</h4>
               <span class="bg-cyan-100 text-cyan-800 text-[10px] font-bold px-1.5 py-0.2 rounded">Verified Facility</span>
-            </div>
+    
+        </div>
             <p class="text-xs text-slate-500 mt-0.5">${h.address}</p>
             <div class="text-[10px] text-slate-400 mt-1">
               Facilities: ${(h.facilities || []).slice(0, 4).join(' • ')}
-            </div>
-          </div>
+    
+        </div>
+  
+        </div>
 
           <div class="text-right">
             <span class="text-xs font-black text-slate-800 block">${h.distance_km ? h.distance_km.toFixed(1) + ' km away' : 'Nearby'}</span>
@@ -1419,7 +1814,9 @@
             <button class="mt-1 bg-cyan-700 text-white text-xs font-bold px-3 py-1 rounded-lg shadow-sm">
               Book Here →
             </button>
-          </div>
+  
+        </div>
+
         </div>
       `).join('');
     }
@@ -1436,11 +1833,13 @@
             <span class="text-[10px] uppercase font-bold text-cyan-600 block">Booking Summary</span>
             <b class="text-sm font-extrabold text-slate-900">${guidedService.name}</b>
             <span class="text-xs text-slate-600 block">Hospital: ${guidedHospital.name} (${guidedHospital.city})</span>
-          </div>
+  
+        </div>
           <div class="text-right">
             <span class="text-xs text-slate-500 block">Est. Cost:</span>
             <b class="text-base font-black text-cyan-800">${guidedService.price}</b>
-          </div>
+  
+        </div>
         `;
 
         const docSection = document.getElementById('guided-doctor-section');
@@ -1495,17 +1894,21 @@
               <div>
                 <b class="text-xs text-slate-900">${d.name}</b>
                 <span class="text-[11px] text-slate-500 block">${d.specialty} (${d.experience_years} yrs exp)</span>
-              </div>
+      
+        </div>
               <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${isAvail ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'}">
                 ${isAvail ? '🟢 Available' : d.status}
               </span>
-            </div>
+    
+        </div>
 
             <div class="flex items-center gap-1.5 flex-wrap pt-1">
               <span class="text-[10px] text-slate-400 font-semibold mr-1">Select Slot:</span>
               ${slotsHtml || '<span class="text-[10px] text-slate-400">Direct walk-in available</span>'}
-            </div>
-          </div>
+    
+        </div>
+  
+        </div>
         `;
       }).join('');
     }
@@ -1636,29 +2039,35 @@
                   ${isBedHold ? 'ACTIVE BED HOLD' : 'CONFIRMED APPOINTMENT'}
                 </span>
                 <span class="text-xs font-mono font-bold">${b.booking_code}</span>
-              </div>
+      
+        </div>
               <h4 class="font-extrabold text-base mt-0.5">
                 ${b.hospital_name} ${isBedHold ? '— ' + (b.bed_type || '').toUpperCase() + ' BED' : (b.service_name ? '— ' + b.service_name : '')}
               </h4>
               <p class="text-xs text-slate-200">
                 Patient: ${b.patient_name} • ${b.doctor_name ? 'Doctor: ' + b.doctor_name + ' (' + (b.slot_time || '') + ')' : (b.preferred_time_window || 'Arrive with reference code')}
               </p>
-            </div>
+    
+        </div>
 
             <div class="flex items-center gap-3">
               ${isBedHold ? `
                 <div class="text-center bg-black/30 px-3 py-1.5 rounded-xl border border-white/20">
                   <span class="text-[10px] uppercase font-bold text-red-200 block">Time Left</span>
                   <span id="countdown-${b.booking_code}" class="text-lg font-black font-mono">--:--</span>
-                </div>
+        
+        </div>
               ` : ''}
 
               <div class="flex flex-col gap-1">
                 <a href="tel:${b.hospital_phone}" class="bg-white text-slate-900 text-xs font-black px-3 py-1 rounded-lg text-center shadow">📞 Call Hospital</a>
                 <button onclick="cancelMyHold('${b.booking_code}')" class="text-slate-300 hover:text-white text-[11px] underline">Release / Cancel</button>
-              </div>
-            </div>
-          </div>
+      
+        </div>
+    
+        </div>
+  
+        </div>
         `;
       }).join('');
     }
@@ -1711,6 +2120,9 @@
     function populateAdminHospitalSelect(hospitals) {
       const select = document.getElementById('admin-hospital-select');
       if (!select) return;
+      const locked = staffHospitalId();
+      if (locked) { hospitals = hospitals.filter(h => h.id === locked); select.disabled = true; }
+      else { select.disabled = false; }
       select.innerHTML = hospitals.map(h => `
         <option value="${h.id}" ${h.id === currentAdminHospitalId ? 'selected' : ''}>${h.name}</option>
       `).join('');
@@ -1738,14 +2150,18 @@
                 <div class="text-xs text-slate-500">
                   <span class="font-bold text-emerald-700">${b.free} free</span> / ${b.total} total
                   ${b.held > 0 ? `<span class="text-amber-600 font-semibold">(${b.held} on 30m hold)</span>` : ''}
-                </div>
-              </div>
+        
+        </div>
+      
+        </div>
 
               <div class="flex items-center gap-2">
                 <button onclick="adminAdjustBed('${bt}', -1)" class="tap-btn bg-rose-100 hover:bg-rose-200 text-rose-800 w-9 h-9 rounded-xl font-black text-lg border border-rose-300 flex items-center justify-center shadow-sm" title="Occupy 1 bed">−</button>
                 <button onclick="adminAdjustBed('${bt}', 1)" class="tap-btn bg-emerald-100 hover:bg-emerald-200 text-emerald-800 w-9 h-9 rounded-xl font-black text-lg border border-emerald-300 flex items-center justify-center shadow-sm" title="Free/Discharge 1 bed">+</button>
-              </div>
-            </div>
+      
+        </div>
+    
+        </div>
           `;
         }).join('');
 
@@ -1763,11 +2179,13 @@
               <div>
                 <b class="text-slate-800 text-sm">${d.name}</b>
                 <span class="text-slate-500 text-xs block">${d.specialty}</span>
-              </div>
+      
+        </div>
               <button onclick="adminCycleDoctor(${d.id}, '${d.status}')" class="tap-btn px-3 py-1.5 rounded-xl text-xs font-black shadow-sm ${statusBadge}">
                 ${d.status.toUpperCase()} ⟳
               </button>
-            </div>
+    
+        </div>
           `;
         }).join('') || '<div class="text-xs text-slate-400">No doctors on duty.</div>';
 
@@ -1836,9 +2254,11 @@
                   ${b.status}
                 </span>
                 <span class="text-slate-400">${b.booking_type === 'bed_hold' ? '🛏 ' + b.bed_type : (b.service_name || '🩺 Consultation')}</span>
-              </div>
+      
+        </div>
               <p class="text-slate-600 mt-0.5">Patient: <b>${b.patient_name}</b> (${b.patient_phone}) ${b.emergency_notes ? '— <i>"' + b.emergency_notes + '"</i>' : ''}</p>
-            </div>
+    
+        </div>
 
             <div>
               ${b.status === 'pending' && b.booking_type === 'bed_hold' ? `
@@ -1846,8 +2266,10 @@
                   ✓ Check-in & Admit
                 </button>
               ` : ''}
-            </div>
-          </div>
+    
+        </div>
+  
+        </div>
         `).join('');
       } catch (e) {
         console.error(e);
@@ -1926,6 +2348,213 @@
         console.error('WS Error:', err);
       }
     }
+
+    // ============================================================
+    // 🔐 AUTH (login / sign-up / logout)
+    // ============================================================
+    let authState = null;
+    try { authState = JSON.parse(localStorage.getItem('medibud_auth') || 'null'); } catch (e) { authState = null; }
+    let authMode = 'login';
+
+    // Attach the JWT to every call to our own API
+    const _origFetch = window.fetch.bind(window);
+    window.fetch = (input, init = {}) => {
+      try {
+        const url = typeof input === 'string' ? input : (input && input.url) || '';
+        if (authState && authState.access_token && (url.startsWith(API_BASE) || url.startsWith('/api'))) {
+          init = { ...init, headers: { ...(init.headers || {}), Authorization: `Bearer ${authState.access_token}` } };
+        }
+      } catch (e) { /* fall through with original request */ }
+      return _origFetch(input, init);
+    };
+
+    function authErrorText(data, fallback) {
+      if (!data || !data.detail) return fallback;
+      if (typeof data.detail === 'string') return data.detail;
+      if (Array.isArray(data.detail)) return data.detail.map(d => (d.loc ? d.loc[d.loc.length - 1] + ': ' : '') + d.msg).join('; ');
+      return fallback;
+    }
+
+    function updateAuthUI() {
+      const btn = document.getElementById('auth-btn');
+      const mobLabel = document.getElementById('mob-auth-label');
+      if (authState) {
+        const first = (authState.full_name || 'User').split(' ')[0];
+        if (btn) btn.innerText = `Hi, ${first} · Logout`;
+        if (mobLabel) mobLabel.innerText = 'Logout';
+      } else {
+        if (btn) btn.innerText = 'Login / Sign‑up';
+        if (mobLabel) mobLabel.innerText = 'Login';
+      }
+      applyRole();
+    }
+
+    function showAuthNotice(msg) {
+      const el = document.getElementById('auth-notice');
+      el.innerText = msg || '';
+      el.classList.toggle('hidden', !msg);
+    }
+
+    function showAuthError(msg) {
+      if (msg) showAuthNotice('');
+      const el = document.getElementById('auth-error');
+      el.innerText = msg || '';
+      el.classList.toggle('hidden', !msg);
+    }
+
+    let regRole = null; // null (picking) | 'patient' | 'staff'
+
+    function setAuthMode(mode) {
+      authMode = mode;
+      const reg = mode === 'register';
+      regRole = null;
+      document.getElementById('auth-title').innerText = reg ? 'Create account' : 'Login';
+      document.getElementById('auth-demo').classList.toggle('hidden', reg);
+      document.getElementById('auth-username').placeholder = reg ? 'Email' : 'Email (or phone)';
+      const on = 'flex-1 py-1.5 rounded-lg bg-white shadow text-cyan-900';
+      const off = 'flex-1 py-1.5 rounded-lg text-slate-500';
+      document.getElementById('auth-tab-login').className = reg ? off : on;
+      document.getElementById('auth-tab-register').className = reg ? on : off;
+      renderAuthLayout();
+      showAuthError('');
+      showAuthNotice('');
+    }
+
+    function renderAuthLayout() {
+      const reg = authMode === 'register';
+      const picking = reg && !regRole;
+      document.getElementById('auth-role-pick').classList.toggle('hidden', !picking);
+      document.getElementById('auth-register-fields').classList.toggle('hidden', !(reg && regRole));
+      document.getElementById('auth-staff-fields').classList.toggle('hidden', regRole !== 'staff');
+      document.getElementById('auth-creds').classList.toggle('hidden', picking);
+      document.getElementById('auth-submit').classList.toggle('hidden', picking);
+      document.getElementById('auth-submit').innerText = reg ? 'Sign up' : 'Login';
+      document.getElementById('auth-role-badge').innerText =
+        regRole === 'staff' ? 'Hospital Staff' : 'User / Patient';
+    }
+
+    function updateStaffHint() {
+      const r = document.getElementById('auth-staff-role').value;
+      document.getElementById('auth-staff-hint').innerHTML = r === 'hospital_admin'
+        ? '<i class="fa-solid fa-user-shield mr-1"></i>Admin accounts are approved by the MediBud admin. You can log in once approved.'
+        : '<i class="fa-solid fa-user-shield mr-1"></i>Your hospital\'s admin (or the MediBud admin) will approve your account. You can log in once approved.';
+    }
+
+    async function chooseRegRole(role) {
+      updateStaffHint();
+      regRole = role;
+      renderAuthLayout();
+      showAuthError('');
+      if (role === 'staff') await populateAuthHospitals();
+      setTimeout(() => document.getElementById('auth-name').focus(), 50);
+    }
+
+    async function populateAuthHospitals() {
+      const sel = document.getElementById('auth-hospital');
+      if (sel.options.length > 1) return;
+      let list = (typeof hospitalsData !== 'undefined' && hospitalsData.length) ? hospitalsData : [];
+      if (!list.length) {
+        try { list = await (await _origFetch(`${API_BASE}/hospitals`)).json(); } catch (e) { list = []; }
+      }
+      list.forEach(h => sel.add(new Option(h.name, h.id)));
+    }
+
+    function openAuthModal(mode) {
+      setAuthMode(mode === 'register' ? 'register' : 'login');
+      const m = document.getElementById('auth-modal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+      setTimeout(() => document.getElementById('auth-username').focus(), 50);
+    }
+
+    function closeAuthModal() {
+      const m = document.getElementById('auth-modal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    function fillDemo(user, pass) {
+      document.getElementById('auth-username').value = user;
+      document.getElementById('auth-password').value = pass;
+      showAuthError('');
+    }
+
+    function handleAuthClick() {
+      if (authState) { logout(); } else { openAuthModal(); }
+    }
+
+    function logout() {
+      authState = null;
+      localStorage.removeItem('medibud_auth');
+      currentTab = 'patient';
+      updateAuthUI();
+    }
+
+    async function submitAuth() {
+      const username = document.getElementById('auth-username').value.trim();
+      const password = document.getElementById('auth-password').value;
+      if (authMode === 'register' && !regRole) { showAuthError('Choose User or Hospital Staff first.'); return; }
+      if (!username || !password) { showAuthError('Please enter your email and password.'); return; }
+      if (authMode === 'register') {
+        if (!document.getElementById('auth-name').value.trim()) { showAuthError('Please enter your full name.'); return; }
+        if (regRole === 'staff' && !document.getElementById('auth-hospital').value) { showAuthError('Please select your hospital.'); return; }
+      }
+      const submit = document.getElementById('auth-submit');
+      submit.disabled = true;
+      showAuthError('');
+      try {
+        if (authMode === 'register') {
+          const full_name = document.getElementById('auth-name').value.trim();
+          const phone = document.getElementById('auth-phone').value.trim();
+          const isStaff = regRole === 'staff';
+          const payload = { email: username, phone, password, full_name,
+            role: isStaff ? document.getElementById('auth-staff-role').value : 'patient' };
+          if (isStaff) payload.hospital_id = Number(document.getElementById('auth-hospital').value);
+          const regRes = await _origFetch(`${API_BASE}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (!regRes.ok) {
+            showAuthError(authErrorText(await regRes.json().catch(() => null), 'Could not create account.'));
+            return;
+          }
+          if (isStaff) {
+            // Staff must be approved by a super admin first: no auto-login.
+            const email = username;
+            setAuthMode('login');
+            document.getElementById('auth-username').value = email;
+            document.getElementById('auth-password').value = '';
+            showAuthNotice('✅ Request sent! Your account is waiting for approval. You can log in once it is approved.');
+            return;
+          }
+        }
+        const res = await _origFetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok) { showAuthError(authErrorText(data, 'Login failed.')); return; }
+        authState = data;
+        try { localStorage.setItem('medibud_auth', JSON.stringify(data)); } catch (e) { /* storage unavailable */ }
+        updateAuthUI();
+        closeAuthModal();
+        document.getElementById('auth-password').value = '';
+        if (data.hospital_id) {
+          currentAdminHospitalId = Number(data.hospital_id);
+          if (currentTab === 'admin') loadAdminView();
+        }
+      } catch (err) {
+        console.error(err);
+        showAuthError('Cannot reach the server. Is it running?');
+      } finally {
+        submit.disabled = false;
+      }
+    }
+
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeAuthModal(); closeEmergencyPage(); } });
+    updateAuthUI();
   </script>
 </body>
 </html>

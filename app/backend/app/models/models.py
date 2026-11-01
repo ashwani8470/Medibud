@@ -30,6 +30,7 @@ from app.core.database import Base
 class UserRole(str, enum.Enum):
     PATIENT = "patient"
     HOSPITAL_ADMIN = "hospital_admin"
+    HOSPITAL_STAFF = "hospital_staff"
     DOCTOR = "doctor"
     SUPER_ADMIN = "super_admin"
 
@@ -79,7 +80,10 @@ class User(Base):
     hospital_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("hospitals.id", ondelete="SET NULL"), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    
+    # Staff self-sign-ups start as "pending" until a super admin approves them.
+    # Values: "approved" | "pending" | "rejected"
+    approval_status: Mapped[str] = mapped_column(String(10), default="approved", server_default="approved", nullable=False)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )

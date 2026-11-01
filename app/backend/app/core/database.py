@@ -26,3 +26,14 @@ def get_db() -> Generator[Session, None, None]:
         yield db
     finally:
         db.close()
+
+
+def migrate_schema() -> None:
+    """Adds columns introduced after a database was first created (create_all never alters tables)."""
+    from sqlalchemy import inspect, text
+    insp = inspect(engine)
+    if "users" in insp.get_table_names():
+        cols = {c["name"] for c in insp.get_columns("users")}
+        if "approval_status" not in cols:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE users ADD COLUMN approval_status VARCHAR(10) NOT NULL DEFAULT 'approved'"))

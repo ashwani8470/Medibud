@@ -128,7 +128,7 @@
 
         </div>
 
-        <button onclick="triggerEmergencyMode()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shadow-lg emergency-pulse">
+        <button id="header-sos-btn" onclick="openEmergencyPage()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shadow-lg emergency-pulse">
           <i class="fa-solid fa-truck-medical text-sm"></i>
           <span>EMERGENCY SOS</span>
         </button>
@@ -469,7 +469,7 @@
       <span>Checkups</span>
     </button>
 
-    <button onclick="triggerEmergencyMode()" class="flex flex-col items-center -top-4 relative">
+    <button id="mob-sos-btn" onclick="openEmergencyPage()" class="flex flex-col items-center -top-4 relative">
       <div class="bg-red-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg border-4 border-white emergency-pulse">
         <i class="fa-solid fa-truck-medical text-lg"></i>
       </div>
@@ -495,6 +495,58 @@
   <!-- ======================================================== -->
   <!-- 🔐 LOGIN / SIGN-UP MODAL                                  -->
   <!-- ======================================================== -->
+  <!-- 🚪 GATE (shown when logged out): Login / Sign up / Emergency -->
+  <!-- ======================================================== -->
+  <div id="gate" class="fixed inset-0 z-40 bg-gradient-to-b from-cyan-900 to-slate-950 text-white items-center justify-center p-5 overflow-y-auto hidden">
+    <div class="w-full max-w-sm space-y-6 text-center">
+      <div>
+        <img src="/static/icon.svg" class="w-16 h-16 mx-auto rounded-2xl shadow-lg" alt="MediBud" />
+        <h1 class="text-3xl font-black mt-3">MediBud</h1>
+        <p class="text-cyan-200 text-sm">Emergency &amp; Availability Network</p>
+      </div>
+      <button onclick="openEmergencyPage()" class="w-full bg-red-600 hover:bg-red-700 text-white font-black py-4 rounded-2xl text-lg shadow-xl emergency-pulse flex items-center justify-center gap-3">
+        <i class="fa-solid fa-truck-medical"></i> EMERGENCY
+      </button>
+      <p class="text-[11px] text-cyan-200 -mt-3">No login needed &mdash; get the nearest hospital with a free bed instantly</p>
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="openAuthModal('login')" class="bg-white text-cyan-900 font-bold py-3 rounded-xl text-sm hover:bg-cyan-50">Login</button>
+        <button onclick="openAuthModal('register')" class="bg-cyan-700 text-white font-bold py-3 rounded-xl text-sm hover:bg-cyan-600 border border-cyan-500">Sign up</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 🚨 EMERGENCY PAGE (no login): auto-locates, asks type, shows nearest hospitals -->
+  <!-- ======================================================== -->
+  <div id="emergency-page" class="fixed inset-0 z-[45] bg-red-50 overflow-y-auto hidden">
+    <div class="bg-red-700 text-white px-4 py-3 flex items-center justify-between sticky top-0 shadow-lg">
+      <div class="flex items-center gap-2 font-black text-lg"><i class="fa-solid fa-truck-medical"></i> EMERGENCY</div>
+      <button onclick="closeEmergencyPage()" class="bg-red-900/60 hover:bg-red-900 px-3 py-1.5 rounded-lg text-xs font-bold"><i class="fa-solid fa-xmark mr-1"></i>Close</button>
+    </div>
+    <div class="max-w-2xl mx-auto p-4 space-y-4">
+      <div class="grid grid-cols-2 gap-3">
+        <a href="tel:108" class="text-center bg-red-600 hover:bg-red-700 text-white font-black py-3 rounded-2xl shadow">📞 Call 108<span class="block text-[10px] font-semibold opacity-90">Ambulance</span></a>
+        <a href="tel:112" class="text-center bg-slate-900 hover:bg-slate-800 text-white font-black py-3 rounded-2xl shadow">📞 Call 112<span class="block text-[10px] font-semibold opacity-90">Emergency helpline</span></a>
+      </div>
+
+      <div class="bg-white rounded-2xl p-3 border border-red-200 space-y-2">
+        <div class="flex items-center justify-between gap-2">
+          <span id="ep-loc-label" class="text-xs font-semibold text-slate-600"><i class="fa-solid fa-location-dot text-red-600"></i> Finding your location&hellip;</span>
+          <button onclick="epUseGps()" class="text-xs font-bold text-cyan-800 border border-cyan-300 rounded-lg px-2 py-1"><i class="fa-solid fa-crosshairs"></i> GPS</button>
+        </div>
+        <select id="ep-loc-select" onchange="epLocChange(this.value)" class="w-full text-xs border border-slate-300 rounded-lg px-2 py-1.5 bg-slate-50"></select>
+      </div>
+
+      <div>
+        <p class="text-sm font-extrabold text-red-900 mb-2">What is the emergency?</p>
+        <div id="ep-chips" class="flex flex-wrap gap-2"></div>
+      </div>
+
+      <div id="ep-results" class="space-y-3"></div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
   <div id="auth-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
     <div class="bg-white max-w-sm w-full rounded-3xl shadow-2xl p-6 border border-slate-100 space-y-4">
       <div class="flex items-center justify-between">
@@ -507,11 +559,36 @@
         <button id="auth-tab-register" onclick="setAuthMode('register')" class="flex-1 py-1.5 rounded-lg text-slate-500">Sign up</button>
       </div>
 
+      <!-- Step 1 (sign-up only): who are you? -->
+      <div id="auth-role-pick" class="space-y-2 hidden">
+        <p class="text-xs font-semibold text-slate-500">I am signing up as</p>
+        <button onclick="chooseRegRole('patient')" class="w-full flex items-center gap-3 text-left border border-slate-200 hover:border-cyan-600 hover:bg-cyan-50 rounded-2xl px-4 py-3 transition-all">
+          <span class="w-10 h-10 rounded-full bg-cyan-100 text-cyan-800 flex items-center justify-center text-lg"><i class="fa-solid fa-user"></i></span>
+          <span><span class="block font-bold text-sm text-slate-900">User / Patient</span><span class="block text-[11px] text-slate-500">Find hospitals, hold beds, book doctors</span></span>
+        </button>
+        <button onclick="chooseRegRole('staff')" class="w-full flex items-center gap-3 text-left border border-slate-200 hover:border-cyan-600 hover:bg-cyan-50 rounded-2xl px-4 py-3 transition-all">
+          <span class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center text-lg"><i class="fa-solid fa-hospital"></i></span>
+          <span><span class="block font-bold text-sm text-slate-900">Hospital Staff</span><span class="block text-[11px] text-slate-500">Manage beds, doctors and incoming patients</span></span>
+        </button>
+      </div>
+
+      <!-- Step 2 (sign-up only): details for the chosen type -->
       <div id="auth-register-fields" class="space-y-2 hidden">
+        <div class="flex items-center justify-between text-xs">
+          <span id="auth-role-badge" class="font-bold text-cyan-800 bg-cyan-50 px-2.5 py-1 rounded-full"></span>
+          <button onclick="setAuthMode('register')" class="text-slate-500 hover:text-slate-800 font-semibold"><i class="fa-solid fa-arrow-left"></i> Change</button>
+        </div>
         <input id="auth-name" type="text" placeholder="Full name" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
         <input id="auth-phone" type="tel" placeholder="Phone (10-15 digits)" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
+        <div id="auth-staff-fields" class="space-y-2 hidden">
+          <select id="auth-hospital" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm bg-white"><option value="">Select your hospital</option></select>
+          <select id="auth-staff-role" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm bg-white">
+            <option value="hospital_admin">Hospital Admin / Staff</option>
+            <option value="doctor">Doctor</option>
+          </select>
+        </div>
       </div>
-      <div class="space-y-2">
+      <div id="auth-creds" class="space-y-2">
         <input id="auth-username" type="text" placeholder="Email (or phone)" autocomplete="username" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
         <input id="auth-password" type="password" placeholder="Password (min 6 chars)" autocomplete="current-password" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" onkeydown="if(event.key==='Enter') submitAuth()" />
       </div>
@@ -876,6 +953,137 @@
       }
     ];
 
+
+    // ========================================================
+    // 👤 ROLE-BASED VIEW: patients see patient UI only, staff see staff UI only
+    // ========================================================
+    function jwtPayload(tok) {
+      try { return JSON.parse(atob(tok.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); } catch (e) { return {}; }
+    }
+    function isStaffUser() { return !!(authState && authState.role && authState.role !== 'patient'); }
+    function staffHospitalId() {
+      if (!isStaffUser() || authState.role === 'super_admin') return null;
+      const id = authState.hospital_id || jwtPayload(authState.access_token).hospital_id;
+      return id ? Number(id) : null;
+    }
+    function setHidden(id, hide) { const el = document.getElementById(id); if (el) el.classList.toggle('hidden', hide); }
+
+    function applyRole() {
+      const loggedIn = !!authState;
+      const staff = isStaffUser();
+      const gate = document.getElementById('gate');
+      gate.classList.toggle('hidden', loggedIn);
+      gate.classList.toggle('flex', !loggedIn);
+
+      // 1) choose the view first (switchTab rewrites tab classes)...
+      if (staff) {
+        const hid = staffHospitalId();
+        if (hid) currentAdminHospitalId = hid;
+        if (typeof hospitalsData !== 'undefined' && hospitalsData.length) populateAdminHospitalSelect(hospitalsData);
+        switchTab('admin');
+      } else if (loggedIn) {
+        switchTab('patient');
+      }
+
+      // 2) ...then hide whatever the role must not see
+      setHidden('tab-patient', staff);                       // patient-only
+      ['mob-nav-hospitals', 'mob-nav-services', 'mob-nav-holds'].forEach(id => setHidden(id, staff));
+      setHidden('tab-admin', !staff);                        // staff-only
+      setHidden('mob-nav-admin', !staff);
+      const sim = document.getElementById('sim-checkbox');
+      if (sim && sim.parentElement) sim.parentElement.classList.toggle('hidden', !staff);
+      setHidden('header-sos-btn', staff);                    // emergency is for patients / guests
+      setHidden('mob-sos-btn', staff);
+    }
+
+    // ========================================================
+    // 🚨 EMERGENCY PAGE (works without login)
+    // ========================================================
+    const EP_TYPES = {
+      any:       { label: '❓ Not sure',          beds: ['general', 'icu'],        name: 'emergency' },
+      accident:  { label: '🚑 Accident / Injury', beds: ['general', 'icu'],        name: 'emergency' },
+      heart:     { label: '❤️ Chest pain / Heart', beds: ['icu'],                  name: 'ICU' },
+      breathing: { label: '🫁 Breathing trouble', beds: ['oxygen', 'ventilator'],  name: 'oxygen / ventilator' },
+      stroke:    { label: '🧠 Stroke / Unconscious', beds: ['icu'],                name: 'ICU' },
+      other:     { label: '➕ Other',              beds: ['general', 'icu'],        name: 'emergency' }
+    };
+    let epType = 'any';
+
+    function openEmergencyPage() {
+      if ('vibrate' in navigator) navigator.vibrate([100, 50, 100]);
+      document.getElementById('emergency-page').classList.remove('hidden');
+      // location presets (copied from the main selector)
+      const src = document.getElementById('user-location-select');
+      const dst = document.getElementById('ep-loc-select');
+      if (src && dst) { dst.innerHTML = src.innerHTML; dst.value = src.value; }
+      epRenderChips();
+      epLocLabel('preset');
+      epSearch();            // show results immediately, no taps needed
+      epUseGps(true);        // then refine with real GPS if allowed
+    }
+    function closeEmergencyPage() { document.getElementById('emergency-page').classList.add('hidden'); }
+
+    function epLocLabel(kind) {
+      const el = document.getElementById('ep-loc-label');
+      el.innerHTML = kind === 'gps'
+        ? '<i class="fa-solid fa-location-crosshairs text-red-600"></i> Using your GPS location'
+        : '<i class="fa-solid fa-location-dot text-red-600"></i> Using selected area (tap GPS for exact)';
+    }
+    function epUseGps(silent) {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(pos => {
+        userLat = pos.coords.latitude; userLon = pos.coords.longitude;
+        epLocLabel('gps'); epSearch();
+      }, () => { if (!silent) alert('GPS unavailable. Please pick your area from the list.'); },
+      { timeout: 5000, maximumAge: 60000 });
+    }
+    function epLocChange(val) {
+      const [la, lo] = String(val).split(',').map(Number);
+      if (isNaN(la) || isNaN(lo)) return;
+      userLat = la; userLon = lo; epLocLabel('preset'); epSearch();
+    }
+    function epRenderChips() {
+      document.getElementById('ep-chips').innerHTML = Object.entries(EP_TYPES).map(([k, t]) => `
+        <button onclick="epPick('${k}')" class="px-3 py-2 rounded-xl text-xs font-extrabold border-2 ${k === epType ? 'bg-red-600 text-white border-red-700' : 'bg-white text-red-800 border-red-300 hover:bg-red-100'}">${t.label}</button>`).join('');
+    }
+    function epPick(k) { epType = k; epRenderChips(); epSearch(); }
+
+    async function epSearch() {
+      const box = document.getElementById('ep-results');
+      box.innerHTML = '<div class="text-sm text-red-800 font-semibold">Finding the nearest hospitals with a free bed&hellip;</div>';
+      const t = EP_TYPES[epType];
+      try {
+        const res = await fetch(`${API_BASE}/hospitals?lat=${userLat}&lon=${userLon}`);
+        if (!res.ok) throw new Error('bad response');
+        const list = await res.json();
+        const withFree = list.map(h => ({ h, free: t.beds.reduce((n, b) => n + ((h.beds && h.beds[b]) ? h.beds[b].free : 0), 0) }));
+        let hits = withFree.filter(x => x.free > 0).slice(0, 3);
+        let note = '';
+        if (!hits.length) {
+          hits = withFree.slice(0, 3);
+          note = `<div class="bg-amber-100 border border-amber-400 text-amber-900 text-xs font-bold rounded-xl p-3">No ${t.name} beds free nearby right now. Call 108 and phone these hospitals to confirm.</div>`;
+        }
+        box.innerHTML = note + hits.map(({ h, free }) => `
+          <div class="bg-white rounded-2xl border-2 border-red-300 shadow p-3.5 space-y-2.5">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <b class="text-slate-900 text-sm font-extrabold">${h.name}</b>
+                <p class="text-[11px] text-slate-500">${h.distance_km != null ? h.distance_km.toFixed(1) + ' km' : ''} · ~${h.estimated_time_min ?? '?'} min drive</p>
+              </div>
+              <span class="${free > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'} text-[10px] font-black px-2 py-0.5 rounded-full whitespace-nowrap">${free} FREE</span>
+            </div>
+            ${h.is_stale ? `<p class="text-[10px] font-bold text-amber-700">⚠ Bed data last updated ${h.last_updated_minutes_ago} min ago — call to confirm</p>` : ''}
+            <div class="flex gap-2">
+              <a href="tel:${h.emergency_phone}" class="flex-1 text-center py-2 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl">📞 CALL NOW</a>
+              <a target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${h.latitude},${h.longitude}" class="flex-1 text-center py-2 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl">🧭 NAVIGATE</a>
+            </div>
+            <button onclick="openEmergencyTriageModal(${h.id})" class="w-full py-2 bg-red-50 hover:bg-red-100 text-red-800 font-extrabold text-xs rounded-xl border border-red-300">⚡ Reserve a bed &amp; see on-duty doctors</button>
+          </div>`).join('');
+      } catch (e) {
+        box.innerHTML = '<div class="bg-white border-2 border-red-400 rounded-2xl p-4 text-sm font-bold text-red-800">Could not load hospitals. <a class="underline" href="tel:108">Call 108 now</a>.</div>';
+      }
+    }
+
     // --- Init ---
     window.addEventListener('DOMContentLoaded', () => {
       detectEnvironmentAndPWA();
@@ -887,6 +1095,7 @@
       renderGuidedCategories();
 
       setInterval(updateHoldCountdowns, 1000);
+      applyRole();
     });
 
     // --- PWA, Device & Install Detection ---
@@ -1851,6 +2060,9 @@
     function populateAdminHospitalSelect(hospitals) {
       const select = document.getElementById('admin-hospital-select');
       if (!select) return;
+      const locked = staffHospitalId();
+      if (locked) { hospitals = hospitals.filter(h => h.id === locked); select.disabled = true; }
+      else { select.disabled = false; }
       select.innerHTML = hospitals.map(h => `
         <option value="${h.id}" ${h.id === currentAdminHospitalId ? 'selected' : ''}>${h.name}</option>
       `).join('');
@@ -2114,6 +2326,7 @@
         if (btn) btn.innerText = 'Login / Sign‑up';
         if (mobLabel) mobLabel.innerText = 'Login';
       }
+      applyRole();
     }
 
     function showAuthError(msg) {
@@ -2122,23 +2335,56 @@
       el.classList.toggle('hidden', !msg);
     }
 
+    let regRole = null; // null (picking) | 'patient' | 'staff'
+
     function setAuthMode(mode) {
       authMode = mode;
       const reg = mode === 'register';
-      document.getElementById('auth-register-fields').classList.toggle('hidden', !reg);
+      regRole = null;
       document.getElementById('auth-title').innerText = reg ? 'Create account' : 'Login';
-      document.getElementById('auth-submit').innerText = reg ? 'Sign up' : 'Login';
       document.getElementById('auth-demo').classList.toggle('hidden', reg);
       document.getElementById('auth-username').placeholder = reg ? 'Email' : 'Email (or phone)';
       const on = 'flex-1 py-1.5 rounded-lg bg-white shadow text-cyan-900';
       const off = 'flex-1 py-1.5 rounded-lg text-slate-500';
       document.getElementById('auth-tab-login').className = reg ? off : on;
       document.getElementById('auth-tab-register').className = reg ? on : off;
+      renderAuthLayout();
       showAuthError('');
     }
 
-    function openAuthModal() {
-      setAuthMode('login');
+    function renderAuthLayout() {
+      const reg = authMode === 'register';
+      const picking = reg && !regRole;
+      document.getElementById('auth-role-pick').classList.toggle('hidden', !picking);
+      document.getElementById('auth-register-fields').classList.toggle('hidden', !(reg && regRole));
+      document.getElementById('auth-staff-fields').classList.toggle('hidden', regRole !== 'staff');
+      document.getElementById('auth-creds').classList.toggle('hidden', picking);
+      document.getElementById('auth-submit').classList.toggle('hidden', picking);
+      document.getElementById('auth-submit').innerText = reg ? 'Sign up' : 'Login';
+      document.getElementById('auth-role-badge').innerText =
+        regRole === 'staff' ? 'Hospital Staff' : 'User / Patient';
+    }
+
+    async function chooseRegRole(role) {
+      regRole = role;
+      renderAuthLayout();
+      showAuthError('');
+      if (role === 'staff') await populateAuthHospitals();
+      setTimeout(() => document.getElementById('auth-name').focus(), 50);
+    }
+
+    async function populateAuthHospitals() {
+      const sel = document.getElementById('auth-hospital');
+      if (sel.options.length > 1) return;
+      let list = (typeof hospitalsData !== 'undefined' && hospitalsData.length) ? hospitalsData : [];
+      if (!list.length) {
+        try { list = await (await _origFetch(`${API_BASE}/hospitals`)).json(); } catch (e) { list = []; }
+      }
+      list.forEach(h => sel.add(new Option(h.name, h.id)));
+    }
+
+    function openAuthModal(mode) {
+      setAuthMode(mode === 'register' ? 'register' : 'login');
       const m = document.getElementById('auth-modal');
       m.classList.remove('hidden');
       m.classList.add('flex');
@@ -2164,13 +2410,19 @@
     function logout() {
       authState = null;
       localStorage.removeItem('medibud_auth');
+      currentTab = 'patient';
       updateAuthUI();
     }
 
     async function submitAuth() {
       const username = document.getElementById('auth-username').value.trim();
       const password = document.getElementById('auth-password').value;
+      if (authMode === 'register' && !regRole) { showAuthError('Choose User or Hospital Staff first.'); return; }
       if (!username || !password) { showAuthError('Please enter your email and password.'); return; }
+      if (authMode === 'register') {
+        if (!document.getElementById('auth-name').value.trim()) { showAuthError('Please enter your full name.'); return; }
+        if (regRole === 'staff' && !document.getElementById('auth-hospital').value) { showAuthError('Please select your hospital.'); return; }
+      }
       const submit = document.getElementById('auth-submit');
       submit.disabled = true;
       showAuthError('');
@@ -2178,10 +2430,14 @@
         if (authMode === 'register') {
           const full_name = document.getElementById('auth-name').value.trim();
           const phone = document.getElementById('auth-phone').value.trim();
+          const isStaff = regRole === 'staff';
+          const payload = { email: username, phone, password, full_name,
+            role: isStaff ? document.getElementById('auth-staff-role').value : 'patient' };
+          if (isStaff) payload.hospital_id = Number(document.getElementById('auth-hospital').value);
           const regRes = await _origFetch(`${API_BASE}/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: username, phone, password, full_name, role: 'patient' })
+            body: JSON.stringify(payload)
           });
           if (!regRes.ok) {
             showAuthError(authErrorText(await regRes.json().catch(() => null), 'Could not create account.'));
@@ -2212,7 +2468,7 @@
       }
     }
 
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAuthModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeAuthModal(); closeEmergencyPage(); } });
     updateAuthUI();
   </script>
 </body>
